@@ -3,24 +3,23 @@ package application
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+
+	"github.com/Hadis2971/go_web/layers/dataAccess"
 )
 
 type UserRouteHandler struct {
 	mux *http.ServeMux
+	dataAccess *dataAccess.DataAccess
 }
 
 type DeleteUserJsonBody struct {
-	Name string
 	ID int
 }
 
-func NewUserRouteHandler (mux *http.ServeMux) *UserRouteHandler {
-	return &UserRouteHandler{mux: mux}
-}
-
-func (user UserRouteHandler) HandleCreateUser (w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello From UserRouteHandler -> HandleCreateUser"))
+func NewUserRouteHandler (mux *http.ServeMux, dataAccess *dataAccess.DataAccess) *UserRouteHandler {
+	return &UserRouteHandler{mux: mux, dataAccess: dataAccess}
 }
 
 func (user UserRouteHandler) HandleDeleteUser (w http.ResponseWriter, r *http.Request) {
@@ -30,11 +29,13 @@ func (user UserRouteHandler) HandleDeleteUser (w http.ResponseWriter, r *http.Re
 		fmt.Println(err);
 	}
 
-	fmt.Println(deleteUserJsonBody)
-	fmt.Fprintf(w, "deleteUserJsonBody: %+v \n", deleteUserJsonBody)
+	if err := user.dataAccess.DeleteUser(deleteUserJsonBody.ID); err != nil {
+		log.Fatal(err);
+	}
+
+	w.WriteHeader(http.StatusOK);
 }
 
 func (user UserRouteHandler) RegisterRoutes () {
-	user.mux.HandleFunc("POST /create/", user.HandleCreateUser)
 	user.mux.HandleFunc("POST /delete/", user.HandleDeleteUser)
 }

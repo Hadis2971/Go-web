@@ -1,7 +1,6 @@
 package application
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
@@ -21,16 +20,14 @@ func (app Application) Run () {
 	dbConnection := service.ConnectToDatabase()
 	dataAccess := dataAccess.NewDataAccess(dbConnection)
 
-	authRouteHandler := NewAuthRouteHandler(mux);
-	userRouteHandler := NewUserRouteHandler(mux)
+	authRouteHandler := NewAuthRouteHandler(mux, dataAccess)
+	userRouteHandler := NewUserRouteHandler(mux, dataAccess)
 
 	authRouteHandler.RegisterRoutes();
 	userRouteHandler.RegisterRoutes();
 
 	mux.Handle("/auth/", http.StripPrefix("/auth", mux));
 	mux.Handle("/user/", http.StripPrefix("/user", mux));
-
-	fmt.Println(dataAccess);
 
 	http.ListenAndServe(app.Port, mux);
 } 
