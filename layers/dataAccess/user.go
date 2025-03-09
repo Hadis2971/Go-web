@@ -8,7 +8,7 @@ import (
 	"github.com/Hadis2971/go_web/models"
 )
 
-type DataAccess struct {
+type UserDataAccess struct {
 	dbConnection *sql.DB
 }
 
@@ -18,11 +18,11 @@ type FoundUserReponse struct {
 	Email string
 }
 
-func NewDataAccess (dbConnection *sql.DB) *DataAccess {
-	return &DataAccess{dbConnection: dbConnection}
+func NewUserDataAccess (dbConnection *sql.DB) *UserDataAccess {
+	return &UserDataAccess{dbConnection: dbConnection}
 }
 
-func (da DataAccess) CreateUser (user models.User) sql.Result {
+func (da UserDataAccess) CreateUser (user models.User) sql.Result {
 	query := "INSERT INTO User (username, email, password) VALUES (?, ?, ?)";
 
 	result, err := da.dbConnection.Exec(query, user.Username, user.Email, user.Password);
@@ -34,7 +34,7 @@ func (da DataAccess) CreateUser (user models.User) sql.Result {
 	return result
 }
 
-func (da DataAccess) DeleteUser (id int) error {
+func (da UserDataAccess) DeleteUser (id int) error {
 	query := "DELETE FROM User WHERE id = ?";
 
 	_, err := da.dbConnection.Exec(query, id);
@@ -46,7 +46,7 @@ func (da DataAccess) DeleteUser (id int) error {
 	return nil;
 }
 
-func (da DataAccess) GetUserByUsernameOrEmail (user models.User) (*FoundUserReponse, error) {
+func (da UserDataAccess) GetUserByUsernameOrEmail (user models.User) (*FoundUserReponse, error) {
 	query := "SELECT id, username, email FROM User WHERE username = ? OR email = ?"
 	var foundUser FoundUserReponse
 	hasResults := false

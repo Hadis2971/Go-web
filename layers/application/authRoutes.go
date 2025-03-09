@@ -2,23 +2,21 @@ package application
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/Hadis2971/go_web/layers/dataAccess"
+	"github.com/Hadis2971/go_web/layers/domain"
 	"github.com/Hadis2971/go_web/models"
-	"github.com/Hadis2971/go_web/util"
 )
 
 type AuthRouteHandler struct {
 	mux *http.ServeMux
-	dataAccess *dataAccess.DataAccess
+	authDomain *domain.AuthDomain
 }
 
-func NewAuthRouteHandler (mux *http.ServeMux, dataAccess *dataAccess.DataAccess) *AuthRouteHandler {
-	return &AuthRouteHandler{mux: mux, dataAccess: dataAccess}
+func NewAuthRouteHandler (mux *http.ServeMux, authDomain *domain.AuthDomain) *AuthRouteHandler {
+	return &AuthRouteHandler{mux: mux, authDomain: authDomain}
 }
 
 func (arh *AuthRouteHandler) HandleRegisterUser (w http.ResponseWriter, r *http.Request) {
@@ -29,28 +27,17 @@ func (arh *AuthRouteHandler) HandleRegisterUser (w http.ResponseWriter, r *http.
 		log.Fatal(err)
 	}
 
-	foundUser, _ := arh.dataAccess.GetUserByUsernameOrEmail(user) 
+	newUser, err := arh.authDomain.RegisterUser(user)
 	
-	fmt.Println(foundUser)
-	
-	if foundUser != nil {
+	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintf(w, "%s", errors.New("Username or Email Already Taken!!!").Error())
+		fmt.Fprintf(w, "%s", err.Error())
 
 		return;
 	}
 
-	hash, err := util.HashPassword(user.Password)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	user.Password = hash;
-
-	arh.dataAccess.CreateUser(user);
-
-	jsonData, err := json.Marshal(user)
+	
+	jsonData, err := json.Marshal(newUser)
 
 	if err != nil {
 		log.Fatal(err)
@@ -68,17 +55,15 @@ func (arh AuthRouteHandler) HandleLoginUser (w http.ResponseWriter, r *http.Requ
 		log.Fatal(err)
 	}
 
-	foundUser, err := arh.dataAccess.GetUserByUsernameOrEmail(user)
+	foundUser, err := arh.authDomain.LoginUser(user)
 
 	if err != nil {
-		log.Fatal(err)
+		w.WriteHeader(http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, "%s", err.Error())
 	}
 
 	jsonData, err := json.Marshal(foundUser)
-
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	w.WriteHeader(http.StatusFound)
 	w.Header().Set("Content-Type", "application/json")

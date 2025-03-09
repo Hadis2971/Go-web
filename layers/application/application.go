@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
+	"github.com/Hadis2971/go_web/layers/domain"
 	"github.com/Hadis2971/go_web/layers/service"
 )
 
@@ -18,10 +19,13 @@ func NewApplication (port string) *Application {
 func (app Application) Run () {
 	mux := http.NewServeMux();
 	dbConnection := service.ConnectToDatabase()
-	dataAccess := dataAccess.NewDataAccess(dbConnection)
+	
+	userDataAccess := dataAccess.NewUserDataAccess(dbConnection)
+	authDomain := domain.NewAuthDomain(userDataAccess)
+	userDomain := domain.NewUserDomain(userDataAccess)
 
-	authRouteHandler := NewAuthRouteHandler(mux, dataAccess)
-	userRouteHandler := NewUserRouteHandler(mux, dataAccess)
+	authRouteHandler := NewAuthRouteHandler(mux, authDomain)
+	userRouteHandler := NewUserRouteHandler(mux, userDomain)
 
 	authRouteHandler.RegisterRoutes();
 	userRouteHandler.RegisterRoutes();
