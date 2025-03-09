@@ -5,17 +5,21 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Hadis2971/go_web/util"
 	"github.com/go-sql-driver/mysql"
 )
 
 
 func ConnectToDatabase () *sql.DB {
+
+	envConfig := util.GetEnvConfig("DB_USER", "DB_PASSWORD", "DB_NET", "DB_Addr", "DB_NAME")
+
 	cfg := mysql.Config{
-        User:   "go_web",
-        Passwd: "password",
-        Net:    "tcp",
-        Addr:   "127.0.0.1:3306",
-        DBName: "go_web",
+        User:   envConfig["DB_USER"],
+        Passwd: envConfig["DB_PASSWORD"],
+        Net:    envConfig["DB_NET"],
+        Addr:   envConfig["DB_Addr"],
+        DBName: envConfig["DB_NAME"],
     }
 
 	db, err := sql.Open("mysql", cfg.FormatDSN());

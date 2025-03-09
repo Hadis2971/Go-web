@@ -1,10 +1,21 @@
 package main
 
-import "github.com/Hadis2971/go_web/layers/application"
+import (
+	"fmt"
+
+	"github.com/Hadis2971/go_web/util"
+
+	"github.com/Hadis2971/go_web/layers/application"
+)
 
 
 func main () {
-	application := application.NewApplication(":3000");
+
+	PORT := util.GetEnvVariable("PORT")
+
+	fmt.Println(PORT)
+
+	application := application.NewApplication(PORT);
 
 	application.Run();
 }

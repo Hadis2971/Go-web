@@ -1,19 +1,32 @@
 package util
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"log"
+	"os"
 
-func HashPassword (password string) (string, error) {
-	buffer, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost);
+	"github.com/joho/godotenv"
+)
 
-	if err != nil {
-		return "", err
+func GetEnvVariable (key string) string {
+	if err := godotenv.Load(".env"); err != nil {
+		log.Fatal("Error Loading ENV Variables!!!")
 	}
 
-	return string(buffer), nil
+	return os.Getenv(key)
 }
 
-func CheckPassword (password string, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+func GetEnvConfig (keys ...string) map[string]string {
+	if err := godotenv.Load(".env"); err != nil {
+		log.Fatal("Error Loading ENV Variables!!!")
+	}
 
-	return err == nil
+	var configMap = make(map[string]string)
+
+	for _, key := range keys {
+		variable := os.Getenv(key)
+
+		configMap[key] = variable
+	}
+
+	return configMap
 }
