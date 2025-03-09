@@ -10,6 +10,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+
+type FoundUserReponse struct {
+	ID int
+	Username string
+	Email string
+}
+
 func HashPassword (password string) (string, error) {
 	buffer, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost);
 
@@ -56,13 +63,20 @@ func (ad *AuthDomain) RegisterUser (user models.User) (*models.User, error) {
 	return &user, nil
 }
 
-func (ad *AuthDomain) LoginUser (user models.User) (*dataAccess.FoundUserReponse, error) {
+func (ad *AuthDomain) LoginUser (user models.User) (*FoundUserReponse, error) {
 	foundUser, err := ad.userDataAccess.GetUserByUsernameOrEmail(user)
 
 	if err != nil {
 		return nil, errors.New("User Not Found!!!")
 	}
 
+	hasMatchingPassword := CheckPassword(user.Password, foundUser.Password)
 
-	return foundUser, nil
+	if !hasMatchingPassword {
+		return nil, errors.New("Incorrect Credentials!!!")
+	}
+
+	foundUserReponse := &FoundUserReponse{ID: foundUser.ID, Username: foundUser.Username , Email: foundUser.Email}
+
+	return foundUserReponse, nil
 }

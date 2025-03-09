@@ -12,17 +12,11 @@ import (
 type IUserDataAccess interface {
 	CreateUser(user models.User) sql.Result
 	DeleteUser (id int) error
-	GetUserByUsernameOrEmail (user models.User) (*FoundUserReponse, error)
+	GetUserByUsernameOrEmail (user models.User) (*models.User, error)
 }
 
 type UserDataAccess struct {
 	dbConnection *sql.DB
-}
-
-type FoundUserReponse struct {
-	ID int
-	Username string
-	Email string
 }
 
 func NewUserDataAccess (dbConnection *sql.DB) *UserDataAccess {
@@ -53,9 +47,9 @@ func (da UserDataAccess) DeleteUser (id int) error {
 	return nil;
 }
 
-func (da UserDataAccess) GetUserByUsernameOrEmail (user models.User) (*FoundUserReponse, error) {
-	query := "SELECT id, username, email FROM User WHERE username = ? OR email = ?"
-	var foundUser FoundUserReponse
+func (da UserDataAccess) GetUserByUsernameOrEmail (user models.User) (*models.User, error) {
+	query := "SELECT * FROM User WHERE username = ? OR email = ?"
+	var foundUser models.User
 	hasResults := false
 
 	rows, err := da.dbConnection.Query(query, user.Username, user.Email)
