@@ -8,6 +8,13 @@ import (
 	"github.com/Hadis2971/go_web/models"
 )
 
+
+type IUserDataAccess interface {
+	CreateUser(user models.User) sql.Result
+	DeleteUser (id int) error
+	GetUserByUsernameOrEmail (user models.User) (*FoundUserReponse, error)
+}
+
 type UserDataAccess struct {
 	dbConnection *sql.DB
 }

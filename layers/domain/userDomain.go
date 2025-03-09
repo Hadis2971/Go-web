@@ -5,7 +5,7 @@ import (
 )
 
 type UserDomain struct {
-	userDataAccess *dataAccess.UserDataAccess
+	userDataAccess dataAccess.IUserDataAccess
 }
 
 func NewUserDomain (userDataAccess *dataAccess.UserDataAccess) *UserDomain {

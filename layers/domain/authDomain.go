@@ -27,7 +27,7 @@ func CheckPassword (password string, hash string) bool {
 }
 
 type AuthDomain struct {
-	userDataAccess *dataAccess.UserDataAccess
+	userDataAccess dataAccess.IUserDataAccess
 }
 
 func NewAuthDomain (userDataAccess *dataAccess.UserDataAccess) *AuthDomain {
