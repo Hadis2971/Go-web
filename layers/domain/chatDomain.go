@@ -53,7 +53,7 @@ func (cd * ChatDomain) removeClient (id string, conn *websocket.Conn) {
 		}
 	}
 
-	clients = append(clients[:index], clients[index + 1])
+	clients = append(clients[:index], clients[:index + 1]...)
 	cd.websocket.Clients[id] = clients;
 	
 	cd.mutex.Unlock()
