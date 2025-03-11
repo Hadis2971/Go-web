@@ -1,8 +1,6 @@
 package application
 
 import (
-	"net/http"
-
 	"github.com/Hadis2971/go_web/layers/domain"
 	"golang.org/x/net/websocket"
 )
@@ -15,14 +13,10 @@ func NewWebsocketRoutesHandler (chatDomain *domain.ChatDomain) *WebsocketRoutesH
 	return &WebsocketRoutesHandler{chatDomain: chatDomain}
 }
 
-func (wrh *WebsocketRoutesHandler) Handler (conn *websocket.Conn) http.HandlerFunc {
-	
+func (wrh *WebsocketRoutesHandler) Handler (ws *websocket.Conn) {
+	id := ws.Request().URL.Query().Get("id")
 
-	return func (w http.ResponseWriter, r *http.Request) {
-		param := r.URL.Query().Get("id")
-
-		wrh.chatDomain.AddNewClient(param, conn)
-	}
+	wrh.chatDomain.AddNewClient(id, ws)
 
 	
 }

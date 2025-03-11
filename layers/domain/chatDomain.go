@@ -62,13 +62,13 @@ func (cd * ChatDomain) removeClient (id string, conn *websocket.Conn) {
 func (cd *ChatDomain) start () {
 	for {
 		select {
-		case message := <- cd.websocket.BroadcastChan: 
-			cd.handleBroadcaseMsg(message)
+		case message := <- cd.websocket.BroadcastChan:
+			cd.handleBroadcastMsg(message)
 		}
 	}
 }
 
-func (cd *ChatDomain) handleBroadcaseMsg (msg service.Message) {
+func (cd *ChatDomain) handleBroadcastMsg (msg service.Message) {
 	clients := cd.websocket.Clients[msg.ID]
 
 	for _, client := range clients {

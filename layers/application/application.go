@@ -37,7 +37,7 @@ func (app Application) Run () {
 
 	mux.Handle("/auth/", http.StripPrefix("/auth", mux));
 	mux.Handle("/user/", http.StripPrefix("/user", mux));
-	mux.Handle("/chat/{id}", websocket.Handler(func (ws *websocket.Conn) {
+	mux.Handle("/chat", websocket.Handler(func (ws *websocket.Conn) {
 		websocketRoutesHandler.Handler(ws)
 	}))
 
