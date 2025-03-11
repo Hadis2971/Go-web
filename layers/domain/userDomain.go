@@ -19,3 +19,11 @@ func (ud *UserDomain) HandleDeleteUser (id int) error {
 
 	return nil
 }
+
+func (ud *UserDomain) HandleUpdateUser (updateUserRequest dataAccess.UpdateUserRequest) error {
+	if err := ud.userDataAccess.UpdateUser(updateUserRequest); err != nil {
+		return err
+	}
+
+	return nil
+}
