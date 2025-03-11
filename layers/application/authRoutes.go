@@ -2,7 +2,6 @@ package application
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -24,14 +23,15 @@ func (arh *AuthRouteHandler) HandleRegisterUser (w http.ResponseWriter, r *http.
 	defer r.Body.Close()
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+
+		return
 	}
 
 	newUser, err := arh.authDomain.RegisterUser(user)
 	
 	if err != nil {
-		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintf(w, "%s", err.Error())
+		http.Error(w, err.Error(), http.StatusForbidden)
 
 		return;
 	}
@@ -58,12 +58,18 @@ func (arh AuthRouteHandler) HandleLoginUser (w http.ResponseWriter, r *http.Requ
 	foundUser, err := arh.authDomain.LoginUser(user)
 
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", err.Error())
+		http.Error(w, err.Error(), http.StatusNotFound)
+
+		return
 	}
 
 	jsonData, err := json.Marshal(foundUser)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
 
 	w.WriteHeader(http.StatusFound)
 	w.Header().Set("Content-Type", "application/json")

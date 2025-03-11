@@ -2,7 +2,6 @@ package application
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
@@ -26,15 +25,13 @@ func (ur UserRouteHandler) HandleDeleteUser (w http.ResponseWriter, r *http.Requ
 	var deleteUserJsonBody DeleteUserJsonBody
 
 	if err := json.NewDecoder(r.Body).Decode(&deleteUserJsonBody); err != nil {
-		fmt.Fprintf(w, "%s", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
 	err := ur.userDomain.HandleDeleteUser(deleteUserJsonBody.ID)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
 	w.WriteHeader(http.StatusOK);
@@ -44,11 +41,15 @@ func (ur UserRouteHandler) HandleUpdateUser (w http.ResponseWriter, r *http.Requ
 	var updateUserRequestJsonBody dataAccess.UpdateUserRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&updateUserRequestJsonBody); err != nil {
-		fmt.Fprintf(w, "%s", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+
+		return
 	}
 
 	if err := ur.userDomain.HandleUpdateUser(updateUserRequestJsonBody); err != nil {
-		fmt.Fprintf(w, "%s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
