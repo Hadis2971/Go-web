@@ -2,7 +2,6 @@ package application
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
@@ -40,8 +39,6 @@ func (ur UserRouteHandler) HandleDeleteUser (w http.ResponseWriter, r *http.Requ
 
 func (ur UserRouteHandler) HandleUpdateUser (w http.ResponseWriter, r *http.Request) {
 	var updateUserRequestJsonBody dataAccess.UpdateUserRequest
-
-	fmt.Println(r.Body)
 
 	if err := json.NewDecoder(r.Body).Decode(&updateUserRequestJsonBody); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
