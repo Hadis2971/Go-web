@@ -9,14 +9,13 @@ type WebsocketRoutesHandler struct {
 	chatDomain *domain.ChatDomain
 }
 
-func NewWebsocketRoutesHandler (chatDomain *domain.ChatDomain) *WebsocketRoutesHandler {
+func NewWebsocketRoutesHandler(chatDomain *domain.ChatDomain) *WebsocketRoutesHandler {
 	return &WebsocketRoutesHandler{chatDomain: chatDomain}
 }
 
-func (wrh *WebsocketRoutesHandler) Handler (ws *websocket.Conn) {
+func (wrh *WebsocketRoutesHandler) Handler(ws *websocket.Conn) {
 	id := ws.Request().URL.Query().Get("id")
 
 	wrh.chatDomain.AddNewClient(id, ws)
 
-	
 }
