@@ -10,16 +10,16 @@ import (
 )
 
 type AuthRouteHandler struct {
-	mux *http.ServeMux
+	mux        *http.ServeMux
 	authDomain *domain.AuthDomain
 }
 
-func NewAuthRouteHandler (mux *http.ServeMux, authDomain *domain.AuthDomain) *AuthRouteHandler {
+func NewAuthRouteHandler(mux *http.ServeMux, authDomain *domain.AuthDomain) *AuthRouteHandler {
 	return &AuthRouteHandler{mux: mux, authDomain: authDomain}
 }
 
-func (arh *AuthRouteHandler) HandleRegisterUser (w http.ResponseWriter, r *http.Request) {
-	var user models.User;
+func (arh *AuthRouteHandler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) {
+	var user models.User
 	defer r.Body.Close()
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -29,14 +29,13 @@ func (arh *AuthRouteHandler) HandleRegisterUser (w http.ResponseWriter, r *http.
 	}
 
 	newUser, err := arh.authDomain.RegisterUser(user)
-	
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 
-		return;
+		return
 	}
 
-	
 	jsonData, err := json.Marshal(newUser)
 
 	if err != nil {
@@ -48,7 +47,7 @@ func (arh *AuthRouteHandler) HandleRegisterUser (w http.ResponseWriter, r *http.
 	w.Write(jsonData)
 }
 
-func (arh AuthRouteHandler) HandleLoginUser (w http.ResponseWriter, r *http.Request) {
+func (arh AuthRouteHandler) HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -71,13 +70,13 @@ func (arh AuthRouteHandler) HandleLoginUser (w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	w.WriteHeader(http.StatusFound)
+	w.WriteHeader(http.StatusFound) // 302 ? you want StatusOK 200
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
 
 }
 
-func (arh AuthRouteHandler) RegisterRoutes () {
+func (arh AuthRouteHandler) RegisterRoutes() {
 	arh.mux.HandleFunc("POST /register/", arh.HandleRegisterUser)
 	arh.mux.HandleFunc("POST /login/", arh.HandleLoginUser)
 }

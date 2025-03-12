@@ -10,15 +10,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
-type FoundUserReponse struct {
-	ID int
+type FoundUserReponse struct { // Don't need this, can just use the models.User, since it has Passwword omitted
+	ID       int
 	Username string
-	Email string
+	Email    string
 }
 
-func HashPassword (password string) (string, error) {
-	buffer, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost);
+func HashPassword(password string) (string, error) {
+	buffer, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
 	if err != nil {
 		return "", err
@@ -27,7 +26,7 @@ func HashPassword (password string) (string, error) {
 	return string(buffer), nil
 }
 
-func CheckPassword (password string, hash string) bool {
+func CheckPassword(password string, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 
 	return err == nil
@@ -37,33 +36,32 @@ type AuthDomain struct {
 	userDataAccess dataAccess.IUserDataAccess
 }
 
-func NewAuthDomain (userDataAccess *dataAccess.UserDataAccess) *AuthDomain {
+func NewAuthDomain(userDataAccess *dataAccess.UserDataAccess) *AuthDomain {
 	return &AuthDomain{userDataAccess: userDataAccess}
 }
 
-func (ad *AuthDomain) RegisterUser (user models.User) (*models.User, error) {
-	foundUser, _ := ad.userDataAccess.GetUserByUsernameOrEmail(user) 
-	
-	if foundUser != nil {
-		
+func (ad *AuthDomain) RegisterUser(user models.User) (*models.User, error) {
+	foundUser, _ := ad.userDataAccess.GetUserByUsernameOrEmail(user)
 
-		return nil, errors.New("Username or Email Already Taken!!!");
+	if foundUser != nil {
+
+		return nil, errors.New("Username or Email Already Taken!!!")
 	}
 
-	hash, err := HashPassword(user.Password)
+	hash, err := HashPassword(user.Password) // Nice, this is standard for saving all user passwords
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	user.Password = hash;
+	user.Password = hash
 
-	ad.userDataAccess.CreateUser(user);
+	ad.userDataAccess.CreateUser(user)
 
 	return &user, nil
 }
 
-func (ad *AuthDomain) LoginUser (user models.User) (*FoundUserReponse, error) {
+func (ad *AuthDomain) LoginUser(user models.User) (*FoundUserReponse, error) {
 	foundUser, err := ad.userDataAccess.GetUserByUsernameOrEmail(user)
 
 	if err != nil {
@@ -72,11 +70,11 @@ func (ad *AuthDomain) LoginUser (user models.User) (*FoundUserReponse, error) {
 
 	hasMatchingPassword := CheckPassword(user.Password, foundUser.Password)
 
-	if !hasMatchingPassword {
+	if !hasMatchingPassword { // !CheckPassword(user.Password, foundUser.Password)
 		return nil, errors.New("Incorrect Credentials!!!")
 	}
 
-	foundUserReponse := &FoundUserReponse{ID: foundUser.ID, Username: foundUser.Username , Email: foundUser.Email}
+	foundUserReponse := &FoundUserReponse{ID: foundUser.ID, Username: foundUser.Username, Email: foundUser.Email}
 
 	return foundUserReponse, nil
 }

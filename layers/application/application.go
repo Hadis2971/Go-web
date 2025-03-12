@@ -14,15 +14,15 @@ type Application struct {
 	Port string
 }
 
-func NewApplication (port string) *Application {
+func NewApplication(port string) *Application {
 	return &Application{Port: port}
 }
 
-func (app Application) Run () {
-	mux := http.NewServeMux();
+func (app Application) Run() {
+	mux := http.NewServeMux()
 	dbConnection := service.ConnectToDatabase()
 	websocketService := service.NewWebsocketService()
-	
+
 	userDataAccess := dataAccess.NewUserDataAccess(dbConnection)
 	authDomain := domain.NewAuthDomain(userDataAccess)
 	userDomain := domain.NewUserDomain(userDataAccess)
@@ -32,14 +32,14 @@ func (app Application) Run () {
 	userRouteHandler := NewUserRouteHandler(mux, userDomain)
 	websocketRoutesHandler := NewWebsocketRoutesHandler(chatDomain)
 
-	authRouteHandler.RegisterRoutes();
-	userRouteHandler.RegisterRoutes();
+	authRouteHandler.RegisterRoutes()
+	userRouteHandler.RegisterRoutes()
 
-	mux.Handle("/auth/", http.StripPrefix("/auth", mux));
-	mux.Handle("/user/", http.StripPrefix("/user", mux));
-	mux.Handle("/chat", websocket.Handler(func (ws *websocket.Conn) {
+	mux.Handle("/auth/", http.StripPrefix("/auth", mux)) // A shared mux is used here, so all endpoints would be accessible by all routes?
+	mux.Handle("/user/", http.StripPrefix("/user", mux)) // I don't think you need to strip the prefix
+	mux.Handle("/chat", websocket.Handler(func(ws *websocket.Conn) {
 		websocketRoutesHandler.Handler(ws)
 	}))
 
-	http.ListenAndServe(app.Port, mux);
-} 
+	http.ListenAndServe(app.Port, mux)
+}

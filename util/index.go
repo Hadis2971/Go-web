@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func GetEnvVariable (key string) string {
+func GetEnvVariable(key string) string {
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error Loading ENV Variables!!!")
 	}
@@ -15,7 +15,7 @@ func GetEnvVariable (key string) string {
 	return os.Getenv(key)
 }
 
-func GetEnvConfig (keys ...string) map[string]string {
+func GetEnvConfig(keys ...string) map[string]string {
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error Loading ENV Variables!!!")
 	}
