@@ -10,9 +10,9 @@ import (
 
 
 type UpdateUserRequest struct {
-	id int
-	username string
-	email string
+	ID int `json:"id"`
+	Username string `json:"username"`
+	Email string `json:"email"`
 }
 
 type IUserDataAccess interface {
@@ -54,9 +54,9 @@ func (da UserDataAccess) DeleteUser (id int) error {
 }
 
 func (da UserDataAccess) UpdateUser (updateUserRequest UpdateUserRequest) error {
-	query := "UPDATE User SET username = ?, email = ? WHETE id = ? "
+	query := "UPDATE User SET username = ?, email = ? WHERE id = ? "
 
-	_, err := da.dbConnection.Query(query, updateUserRequest.username, updateUserRequest.email, updateUserRequest.id)
+	_, err := da.dbConnection.Query(query, updateUserRequest.Username, updateUserRequest.Email, updateUserRequest.ID)
 
 	if err != nil {
 		return err

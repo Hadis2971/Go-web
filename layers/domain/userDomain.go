@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"fmt"
+
 	"github.com/Hadis2971/go_web/layers/dataAccess"
 )
 
@@ -21,6 +23,8 @@ func (ud *UserDomain) HandleDeleteUser (id int) error {
 }
 
 func (ud *UserDomain) HandleUpdateUser (updateUserRequest dataAccess.UpdateUserRequest) error {
+	fmt.Println(updateUserRequest)
+
 	if err := ud.userDataAccess.UpdateUser(updateUserRequest); err != nil {
 		return err
 	}
