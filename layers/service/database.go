@@ -31,7 +31,10 @@ func ConnectToDatabase() *sql.DB {
 
 	if err != nil {
 		log.Fatal(err)
-	} // These are good places to do a fatal. No point starting if the database isn't ready.
+	} 
+	
+	// These are good places to do a fatal. No point starting if the database isn't ready.
+	// Hadis => So you mean this is a good fatal point or?
 
 	fmt.Println("Database Connected")
 

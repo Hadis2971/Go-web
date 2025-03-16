@@ -7,12 +7,13 @@ import (
 )
 
 // DockerFile is good to add, and required for most backends these days. Makes it way easier to share projects.
+// Hadis => Can I do it at the end? I guess I can. It's just to make an image with dependecies at the end right?
 
-func main() { // Use `gofmt w .` golang has a linter/formatter built in to the compiler
+func main() {
 
 	PORT := util.GetEnvVariable("PORT")
 
-	application := application.NewApplication(PORT) // application := application ? This would overwrite the library, use a different name
+	GoWeb := application.NewApplication(PORT)
 
-	application.Run()
+	GoWeb.Run()
 }

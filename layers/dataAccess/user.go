@@ -3,7 +3,6 @@ package dataAccess
 import (
 	"database/sql"
 	"errors"
-	"log"
 
 	"github.com/Hadis2971/go_web/models"
 )
@@ -15,7 +14,7 @@ type UpdateUserRequest struct {
 }
 
 type IUserDataAccess interface {
-	CreateUser(user models.User)
+	CreateUser(user models.User) error
 	DeleteUser(id int) error
 	UpdateUser(updateUserRequest UpdateUserRequest) error
 	GetUserByUsernameOrEmail(user models.User) (*models.User, error)
@@ -30,14 +29,17 @@ func NewUserDataAccess(dbConnection *sql.DB) *UserDataAccess {
 	return &UserDataAccess{dbConnection: dbConnection}
 }
 
-func (da UserDataAccess) CreateUser(user models.User) {
+func (da UserDataAccess) CreateUser(user models.User) error {
 	query := "INSERT INTO User (username, email, password) VALUES (?, ?, ?)"
 
 	_, err := da.dbConnection.Exec(query, user.Username, user.Email, user.Password)
 
 	if err != nil {
-		log.Fatal(err)
-	} // fatal, never force a shutdown, handle the error
+		return errors.New("Error Creating The User!!!")
+	}
+
+
+	return nil
 }
 
 func (da UserDataAccess) DeleteUser(id int) error {
@@ -46,8 +48,8 @@ func (da UserDataAccess) DeleteUser(id int) error {
 	_, err := da.dbConnection.Exec(query, id)
 
 	if err != nil {
-		return err
-	} // provide context to your err otherwise won't be able to figure out what broke and where. fmt.Errorf("couldn't delete user: %v", err)
+		return errors.New("Could Not Delete The User!!!")
+	}
 
 	return nil
 }
@@ -58,7 +60,7 @@ func (da UserDataAccess) UpdateUser(updateUserRequest UpdateUserRequest) error {
 	_, err := da.dbConnection.Query(query, updateUserRequest.Username, updateUserRequest.Email, updateUserRequest.ID)
 
 	if err != nil {
-		return err
+		return errors.New("Could Not Update The User!!!")
 	}
 
 	return nil
@@ -67,29 +69,21 @@ func (da UserDataAccess) UpdateUser(updateUserRequest UpdateUserRequest) error {
 func (da UserDataAccess) GetUserByUsernameOrEmail(user models.User) (*models.User, error) {
 	query := "SELECT * FROM User WHERE username = ? OR email = ?"
 	var foundUser models.User
-	hasResults := false
 
-	rows, err := da.dbConnection.Query(query, user.Username, user.Email) // Should use QueryRow, you don't want more than 1 user here.
-	defer rows.Close()                                                   // You need to call this after handling the error, other rows will be nil and cause a panic
+
+	row:= da.dbConnection.QueryRow(query, user.Username, user.Email)
+
+	err := row.Scan(&foundUser.ID, &foundUser.Username, &foundUser.Email, &foundUser.Password)
 
 	if err != nil {
 		return nil, err
-	}
-
-	for rows.Next() {
-		hasResults = true
-		rows.Scan(&foundUser.ID, &foundUser.Username, &foundUser.Email) // Handle error
-	}
-
-	if !hasResults {
-		return nil, errors.New("User Not Found") // go prefers lowercase "user not found"
 	}
 
 	return &foundUser, nil
 }
 
 func (da UserDataAccess) GetUserById(id int) (*models.User, error) {
-	query := "SELECT * FROM User WHETE id = ?" // Typo WHETE -> WHERE
+	query := "SELECT * FROM User WHERE id = ?"
 	var foundUser models.User
 	hasResults := false
 

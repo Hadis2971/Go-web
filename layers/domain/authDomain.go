@@ -2,21 +2,17 @@ package domain
 
 import (
 	"errors"
-	"log"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
 	"github.com/Hadis2971/go_web/models"
-
-	"golang.org/x/crypto/bcrypt"
+	"github.com/Hadis2971/go_web/util"
 )
 
-type FoundUserReponse struct { // Don't need this, can just use the models.User, since it has Passwword omitted
-	ID       int
-	Username string
-	Email    string
-}
-
-func HashPassword(password string) (string, error) {
+func hashPassword(password string) (string, error) {
 	buffer, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
 	if err != nil {
@@ -26,10 +22,31 @@ func HashPassword(password string) (string, error) {
 	return string(buffer), nil
 }
 
-func CheckPassword(password string, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+func checkPassword(password string, hash string) bool {
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
+		return false
+	}
 
-	return err == nil
+	return true
+}
+
+func generateJWTLoginToken (user *models.User) (string, error) {
+	secret := util.GetEnvVariable("JWT_LOGIN_TOKEN_SECRET")
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, 
+        jwt.MapClaims{ 
+		"id": user.ID,
+        "username": user.Username,
+		"email": user.Email,
+        "exp": time.Now().Add(time.Hour * 24).Unix(), 
+        })
+
+    tokenString, err := token.SignedString(secret)
+    if err != nil {
+    return "", err
+    }
+
+ return tokenString, nil
 }
 
 type AuthDomain struct {
@@ -48,33 +65,40 @@ func (ad *AuthDomain) RegisterUser(user models.User) (*models.User, error) {
 		return nil, errors.New("Username or Email Already Taken!!!")
 	}
 
-	hash, err := HashPassword(user.Password) // Nice, this is standard for saving all user passwords
+	hash, err := hashPassword(user.Password) 
+	
+	// Nice, this is standard for saving all user passwords
+	// Hadis => Thanks :)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	user.Password = hash
 
-	ad.userDataAccess.CreateUser(user)
+	if err := ad.userDataAccess.CreateUser(user); err != nil {
+		return nil, err
+	}
 
 	return &user, nil
 }
 
-func (ad *AuthDomain) LoginUser(user models.User) (*FoundUserReponse, error) {
+func (ad *AuthDomain) LoginUser(user models.User) (string, error) {
 	foundUser, err := ad.userDataAccess.GetUserByUsernameOrEmail(user)
 
 	if err != nil {
-		return nil, errors.New("User Not Found!!!")
+		return "", errors.New("User Not Found!!!")
 	}
 
-	hasMatchingPassword := CheckPassword(user.Password, foundUser.Password)
-
-	if !hasMatchingPassword { // !CheckPassword(user.Password, foundUser.Password)
-		return nil, errors.New("Incorrect Credentials!!!")
+	if !checkPassword(user.Password, foundUser.Password) {
+		return "", errors.New("Incorrect Credentials!!!")
 	}
 
-	foundUserReponse := &FoundUserReponse{ID: foundUser.ID, Username: foundUser.Username, Email: foundUser.Email}
+	token, err := generateJWTLoginToken(foundUser)
 
-	return foundUserReponse, nil
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }

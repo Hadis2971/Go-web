@@ -8,13 +8,15 @@ type Message struct {
 }
 
 type WebsocketService struct {
-	Clients       map[string][]*websocket.Conn // Would be easier to have map[string]map[*websockeet.Conn]bool that way you don't have to loop through all connections when trying to find 1 of them
+	Clients       map[string]map[*websocket.Conn]bool
 	BroadcastChan chan Message
+	ErrorChan chan bool
 }
 
 func NewWebsocketService() *WebsocketService {
 	return &WebsocketService{
-		Clients:       make(map[string][]*websocket.Conn),
+		Clients:       make(map[string]map[*websocket.Conn]bool),
 		BroadcastChan: make(chan Message),
+		ErrorChan: make(chan bool),
 	}
 }

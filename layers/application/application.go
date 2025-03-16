@@ -28,15 +28,20 @@ func (app Application) Run() {
 	userDomain := domain.NewUserDomain(userDataAccess)
 	chatDomain := domain.NewChatDomain(websocketService)
 
-	authRouteHandler := NewAuthRouteHandler(mux, authDomain)
-	userRouteHandler := NewUserRouteHandler(mux, userDomain)
+	authRouteHandler := NewAuthRouteHandler(authDomain)
+	userRouteHandler := NewUserRouteHandler(userDomain)
 	websocketRoutesHandler := NewWebsocketRoutesHandler(chatDomain)
 
-	authRouteHandler.RegisterRoutes()
-	userRouteHandler.RegisterRoutes()
+	authMux := authRouteHandler.RegisterRoutes()
+	userMux := userRouteHandler.RegisterRoutes()
 
-	mux.Handle("/auth/", http.StripPrefix("/auth", mux)) // A shared mux is used here, so all endpoints would be accessible by all routes?
-	mux.Handle("/user/", http.StripPrefix("/user", mux)) // I don't think you need to strip the prefix
+	mux.Handle("/auth/", http.StripPrefix("/auth", authMux))
+	mux.Handle("/user/", http.StripPrefix("/user", userMux)) 
+	// I don't think you need to strip the prefix
+	// Hadis => You mean it's bad design or in a techical way?
+	//			As far as I can see I need it since i plan to send requests to /user/xxx
+	//			Since that would be a RESTFUL design
+
 	mux.Handle("/chat", websocket.Handler(func(ws *websocket.Conn) {
 		websocketRoutesHandler.Handler(ws)
 	}))

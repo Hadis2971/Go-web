@@ -2,7 +2,6 @@ package application
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/Hadis2971/go_web/layers/domain"
@@ -14,8 +13,8 @@ type AuthRouteHandler struct {
 	authDomain *domain.AuthDomain
 }
 
-func NewAuthRouteHandler(mux *http.ServeMux, authDomain *domain.AuthDomain) *AuthRouteHandler {
-	return &AuthRouteHandler{mux: mux, authDomain: authDomain}
+func NewAuthRouteHandler(authDomain *domain.AuthDomain) *AuthRouteHandler {
+	return &AuthRouteHandler{mux: http.NewServeMux(), authDomain: authDomain}
 }
 
 func (arh *AuthRouteHandler) HandleRegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +38,9 @@ func (arh *AuthRouteHandler) HandleRegisterUser(w http.ResponseWriter, r *http.R
 	jsonData, err := json.Marshal(newUser)
 
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
@@ -48,13 +49,17 @@ func (arh *AuthRouteHandler) HandleRegisterUser(w http.ResponseWriter, r *http.R
 }
 
 func (arh AuthRouteHandler) HandleLoginUser(w http.ResponseWriter, r *http.Request) {
+	type Response struct {token string}
+
 	var user models.User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
 	}
 
-	foundUser, err := arh.authDomain.LoginUser(user)
+	token, err := arh.authDomain.LoginUser(user)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -62,7 +67,7 @@ func (arh AuthRouteHandler) HandleLoginUser(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	jsonData, err := json.Marshal(foundUser)
+	jsonData, err := json.Marshal(&Response{token})
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -70,13 +75,15 @@ func (arh AuthRouteHandler) HandleLoginUser(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	w.WriteHeader(http.StatusFound) // 302 ? you want StatusOK 200
+	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
 
 }
 
-func (arh AuthRouteHandler) RegisterRoutes() {
+func (arh AuthRouteHandler) RegisterRoutes() *http.ServeMux {
 	arh.mux.HandleFunc("POST /register/", arh.HandleRegisterUser)
 	arh.mux.HandleFunc("POST /login/", arh.HandleLoginUser)
+
+	return arh.mux
 }

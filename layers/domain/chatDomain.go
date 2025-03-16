@@ -20,17 +20,32 @@ func NewChatDomain(websocket *service.WebsocketService) *ChatDomain {
 func (cd *ChatDomain) AddNewClient(id string, conn *websocket.Conn) {
 	cd.mutex.Lock()
 
-	cd.websocket.Clients[id] = append(cd.websocket.Clients[id], conn) // There's no authentication for this, so you can end up with infinite connections.
+	cd.websocket.Clients[id][conn] = true
+	
+	// There's no authentication for this, so you can end up with infinite connections.
+	// Hadis => How would I do the auth? How can I comapre 2 ws conns?
+
+	// if cd.websocket.Clients[id][conn] {
+	// 	return
+	// }
+	// Can I do something like this?
+	// It seems that golang does a deep comparison instead of a shallow. So it would work?
 
 	cd.mutex.Unlock()
 
-	go cd.start() // This doesn't look correct, you have 2 golang loops, and when does this loop stop? Never?
+	go cd.start() 
+	
+	// This doesn't look correct, you have 2 golang loops, and when does this loop stop? Never?
+	// Hadis => I added a new chan for errors so I add a true values on line 37 when there is an error
+	// 			So if the client shutsdown the connection add to the chan true and then i have a case in
+	//			start for it and do a return
 
 	for {
 		var message service.Message
 
 		if err := websocket.JSON.Receive(conn, &message); err != nil {
 			cd.removeClient(message.ID, conn)
+			cd.websocket.ErrorChan <- true
 
 			return
 		}
@@ -44,16 +59,8 @@ func (cd *ChatDomain) removeClient(id string, conn *websocket.Conn) {
 
 	clients := cd.websocket.Clients[id]
 
-	var index int
+	delete(clients, conn)
 
-	for idx, _ := range clients { // Don't need the _
-		if clients[idx] == conn {
-			index = idx
-			break
-		}
-	}
-
-	clients = append(clients[:index], clients[:index+1]...)
 	cd.websocket.Clients[id] = clients
 
 	cd.mutex.Unlock()
@@ -64,6 +71,10 @@ func (cd *ChatDomain) start() {
 		select {
 		case message := <-cd.websocket.BroadcastChan:
 			cd.handleBroadcastMsg(message)
+		case err := <- cd.websocket.ErrorChan:
+			if err {
+				return
+			}
 		}
 	}
 }
@@ -71,7 +82,7 @@ func (cd *ChatDomain) start() {
 func (cd *ChatDomain) handleBroadcastMsg(msg service.Message) {
 	clients := cd.websocket.Clients[msg.ID]
 
-	for _, client := range clients {
+	for client := range clients {
 		websocket.JSON.Send(client, msg.Text)
 	}
 }
