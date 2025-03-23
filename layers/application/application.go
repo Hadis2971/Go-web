@@ -3,8 +3,6 @@ package application
 import (
 	"net/http"
 
-	"golang.org/x/net/websocket"
-
 	"github.com/Hadis2971/go_web/layers/dataAccess"
 	"github.com/Hadis2971/go_web/layers/domain"
 	"github.com/Hadis2971/go_web/layers/service"
@@ -34,6 +32,7 @@ func (app Application) Run() {
 
 	authMux := authRouteHandler.RegisterRoutes()
 	userMux := userRouteHandler.RegisterRoutes()
+	wsChantHandler := websocketRoutesHandler.RegisterRoute()
 
 	mux.Handle("/auth/", http.StripPrefix("/auth", authMux))
 	mux.Handle("/user/", http.StripPrefix("/user", userMux)) 
@@ -42,9 +41,7 @@ func (app Application) Run() {
 	//			As far as I can see I need it since i plan to send requests to /user/xxx
 	//			Since that would be a RESTFUL design
 
-	mux.Handle("/chat", websocket.Handler(func(ws *websocket.Conn) {
-		websocketRoutesHandler.Handler(ws)
-	}))
+	mux.Handle("/chat", wsChantHandler)
 
 	http.ListenAndServe(app.Port, mux)
 }

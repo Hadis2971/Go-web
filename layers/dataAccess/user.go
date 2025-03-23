@@ -25,6 +25,13 @@ type UserDataAccess struct {
 	dbConnection *sql.DB
 }
 
+var ( 
+	InternalServerError = errors.New("Internal Server Error!!!")
+	ErrorMissingID = errors.New("Missing ID Field!!!")
+	ErrorMissingUsernameOrEmail = errors.New("Missing Username Or Email!!!")
+	ErrorUserNotFound = errors.New("User Not Found!!!")
+)
+
 func NewUserDataAccess(dbConnection *sql.DB) *UserDataAccess {
 	return &UserDataAccess{dbConnection: dbConnection}
 }
@@ -35,7 +42,7 @@ func (da UserDataAccess) CreateUser(user models.User) error {
 	_, err := da.dbConnection.Exec(query, user.Username, user.Email, user.Password)
 
 	if err != nil {
-		return errors.New("Error Creating The User!!!")
+		return InternalServerError
 	}
 
 
@@ -45,10 +52,14 @@ func (da UserDataAccess) CreateUser(user models.User) error {
 func (da UserDataAccess) DeleteUser(id int) error {
 	query := "DELETE FROM User WHERE id = ?"
 
+	if (id == 0) {
+		return ErrorMissingID
+	}
+
 	_, err := da.dbConnection.Exec(query, id)
 
 	if err != nil {
-		return errors.New("Could Not Delete The User!!!")
+		return InternalServerError
 	}
 
 	return nil
@@ -57,10 +68,14 @@ func (da UserDataAccess) DeleteUser(id int) error {
 func (da UserDataAccess) UpdateUser(updateUserRequest UpdateUserRequest) error {
 	query := "UPDATE User SET username = ?, email = ? WHERE id = ?"
 
+	if (updateUserRequest.ID == 0) {
+		return ErrorMissingID
+	}
+
 	_, err := da.dbConnection.Query(query, updateUserRequest.Username, updateUserRequest.Email, updateUserRequest.ID)
 
 	if err != nil {
-		return errors.New("Could Not Update The User!!!")
+		return InternalServerError
 	}
 
 	return nil
@@ -70,8 +85,11 @@ func (da UserDataAccess) GetUserByUsernameOrEmail(user models.User) (*models.Use
 	query := "SELECT * FROM User WHERE username = ? OR email = ?"
 	var foundUser models.User
 
+	if (user.Username == "" && user.Email == "") {
+		return nil, ErrorMissingUsernameOrEmail
+	}
 
-	row:= da.dbConnection.QueryRow(query, user.Username, user.Email)
+	row := da.dbConnection.QueryRow(query, user.Username, user.Email)
 
 	err := row.Scan(&foundUser.ID, &foundUser.Username, &foundUser.Email, &foundUser.Password)
 
@@ -85,22 +103,16 @@ func (da UserDataAccess) GetUserByUsernameOrEmail(user models.User) (*models.Use
 func (da UserDataAccess) GetUserById(id int) (*models.User, error) {
 	query := "SELECT * FROM User WHERE id = ?"
 	var foundUser models.User
-	hasResults := false
 
-	rows, err := da.dbConnection.Query(query, id)
-	defer rows.Close()
-
-	if err != nil {
-		return nil, err
+	if (id == 0) {
+		return nil, ErrorMissingID
 	}
 
-	for rows.Next() {
-		hasResults = true
-		rows.Scan(&foundUser.ID, &foundUser.Username, &foundUser.Email, &foundUser.Password)
-	}
+	row := da.dbConnection.QueryRow(query, id)
 
-	if !hasResults {
-		return nil, errors.New("No User Found")
+	
+	if err := row.Scan(&foundUser.ID, &foundUser.Username, &foundUser.Email, &foundUser.Password); err != nil {
+		return nil, ErrorUserNotFound
 	}
 
 	return &foundUser, nil

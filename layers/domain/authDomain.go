@@ -12,6 +12,12 @@ import (
 	"github.com/Hadis2971/go_web/util"
 )
 
+var (
+	ErrorUsernameOrEmailAlreadyTaken = errors.New("Username or Email Already Taken!!!")
+	ErrorRegisterUserMissingFields = errors.New("All Fileds Are Mandatory!!!")
+	ErrorLoginUserInvalidCredentials = errors.New("Incorrect Credentials!!!")
+)
+
 func hashPassword(password string) (string, error) {
 	buffer, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
@@ -41,9 +47,10 @@ func generateJWTLoginToken (user *models.User) (string, error) {
         "exp": time.Now().Add(time.Hour * 24).Unix(), 
         })
 
-    tokenString, err := token.SignedString(secret)
+    tokenString, err := token.SignedString([]byte(secret))
+
     if err != nil {
-    return "", err
+    	return "", err
     }
 
  return tokenString, nil
@@ -57,12 +64,16 @@ func NewAuthDomain(userDataAccess *dataAccess.UserDataAccess) *AuthDomain {
 	return &AuthDomain{userDataAccess: userDataAccess}
 }
 
-func (ad *AuthDomain) RegisterUser(user models.User) (*models.User, error) {
+func (ad *AuthDomain) RegisterUser(user models.User) error {
 	foundUser, _ := ad.userDataAccess.GetUserByUsernameOrEmail(user)
 
 	if foundUser != nil {
 
-		return nil, errors.New("Username or Email Already Taken!!!")
+		return dataAccess.ErrorMissingUsernameOrEmail
+	}
+
+	if (user.Username == "" || user.Email == "" || user.Password == "") {
+		return ErrorRegisterUserMissingFields
 	}
 
 	hash, err := hashPassword(user.Password) 
@@ -71,30 +82,31 @@ func (ad *AuthDomain) RegisterUser(user models.User) (*models.User, error) {
 	// Hadis => Thanks :)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	user.Password = hash
 
 	if err := ad.userDataAccess.CreateUser(user); err != nil {
-		return nil, err
+		return err
 	}
 
-	return &user, nil
+	return nil
 }
 
 func (ad *AuthDomain) LoginUser(user models.User) (string, error) {
 	foundUser, err := ad.userDataAccess.GetUserByUsernameOrEmail(user)
 
 	if err != nil {
-		return "", errors.New("User Not Found!!!")
+		return "", err
 	}
 
 	if !checkPassword(user.Password, foundUser.Password) {
-		return "", errors.New("Incorrect Credentials!!!")
+		return "", ErrorLoginUserInvalidCredentials
 	}
 
 	token, err := generateJWTLoginToken(foundUser)
+
 
 	if err != nil {
 		return "", err

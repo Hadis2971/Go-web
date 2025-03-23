@@ -27,7 +27,7 @@ func (arh *AuthRouteHandler) HandleRegisterUser(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	newUser, err := arh.authDomain.RegisterUser(user)
+	err := arh.authDomain.RegisterUser(user)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
@@ -35,21 +35,11 @@ func (arh *AuthRouteHandler) HandleRegisterUser(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	jsonData, err := json.Marshal(newUser)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-
-		return
-	}
-
 	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonData)
 }
 
 func (arh AuthRouteHandler) HandleLoginUser(w http.ResponseWriter, r *http.Request) {
-	type Response struct {token string}
+	type Response struct {Token string `json:"token"`}
 
 	var user models.User
 
@@ -67,7 +57,9 @@ func (arh AuthRouteHandler) HandleLoginUser(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	jsonData, err := json.Marshal(&Response{token})
+	
+
+	jsonData, err := json.Marshal(&Response{Token: token})
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

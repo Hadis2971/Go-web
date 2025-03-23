@@ -20,7 +20,17 @@ func NewChatDomain(websocket *service.WebsocketService) *ChatDomain {
 func (cd *ChatDomain) AddNewClient(id string, conn *websocket.Conn) {
 	cd.mutex.Lock()
 
-	cd.websocket.Clients[id][conn] = true
+	if (cd.websocket.Clients[id] == nil) {
+		cd.websocket.Clients[id] = make(map[*websocket.Conn]bool)
+	}
+
+	if (cd.websocket.Clients[id][conn] == true) {
+		return
+	} else {
+		cd.websocket.Clients[id][conn] = true
+	}
+
+	
 	
 	// There's no authentication for this, so you can end up with infinite connections.
 	// Hadis => How would I do the auth? How can I comapre 2 ws conns?
@@ -44,7 +54,9 @@ func (cd *ChatDomain) AddNewClient(id string, conn *websocket.Conn) {
 		var message service.Message
 
 		if err := websocket.JSON.Receive(conn, &message); err != nil {
+			conn.Close()
 			cd.removeClient(message.ID, conn)
+	
 			cd.websocket.ErrorChan <- true
 
 			return
