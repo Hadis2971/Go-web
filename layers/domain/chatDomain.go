@@ -69,11 +69,7 @@ func (cd *ChatDomain) AddNewClient(id string, conn *websocket.Conn) {
 func (cd *ChatDomain) removeClient(id string, conn *websocket.Conn) {
 	cd.mutex.Lock()
 
-	clients := cd.websocket.Clients[id]
-
-	delete(clients, conn)
-
-	cd.websocket.Clients[id] = clients
+	delete(cd.websocket.Clients[id], conn)
 
 	cd.mutex.Unlock()
 }
