@@ -71,6 +71,10 @@ func (cd *ChatDomain) removeClient(id string, conn *websocket.Conn) {
 
 	delete(cd.websocket.Clients[id], conn)
 
+	if (len(cd.websocket.Clients[id]) == 0) {
+		delete(cd.websocket.Clients, id)
+	}
+
 	cd.mutex.Unlock()
 }
 
