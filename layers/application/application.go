@@ -22,16 +22,21 @@ func (app Application) Run() {
 	websocketService := service.NewWebsocketService()
 
 	userDataAccess := dataAccess.NewUserDataAccess(dbConnection)
+	productDataAccess := dataAccess.NewProductDataAccess(dbConnection)
+
 	authDomain := domain.NewAuthDomain(userDataAccess)
 	userDomain := domain.NewUserDomain(userDataAccess)
+	productDomain := domain.NewProductDomain(productDataAccess)
 	chatDomain := domain.NewChatDomain(websocketService)
 
 	authRouteHandler := NewAuthRouteHandler(authDomain)
 	userRouteHandler := NewUserRouteHandler(userDomain)
+	productRouteHandler := NewProductRoutes(productDomain)
 	websocketRoutesHandler := NewWebsocketRoutesHandler(chatDomain)
 
 	authMux := authRouteHandler.RegisterRoutes()
 	userMux := userRouteHandler.RegisterRoutes()
+	productMux := productRouteHandler.RegisterRoutes()
 	wsChantHandler := websocketRoutesHandler.RegisterRoute()
 
 	mux.Handle("/auth/", http.StripPrefix("/auth", authMux))
@@ -40,6 +45,7 @@ func (app Application) Run() {
 	// Hadis => You mean it's bad design or in a techical way?
 	//			As far as I can see I need it since i plan to send requests to /user/xxx
 	//			Since that would be a RESTFUL design
+	mux.Handle("/product/", http.StripPrefix("/product", productMux))
 
 	mux.Handle("/chat", wsChantHandler)
 
