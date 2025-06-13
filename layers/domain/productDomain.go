@@ -15,7 +15,7 @@ func NewProductDomain(productDataAccess *dataAccess.ProductDataAccess) *ProductD
 	return &ProductDomain{productDataAccess: productDataAccess}
 }
 
-func (pd *ProductDomain) HandleCreateProduct(product models.Product) error {
+func (pd *ProductDomain) HandleCreateProduct(product models.CreateProductReq) error {
 	err := pd.productDataAccess.CreateProduct(&product)
 
 	if errors.Is(err, dataAccess.ErrorCreateProduct) {

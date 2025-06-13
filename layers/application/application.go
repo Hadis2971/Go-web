@@ -21,6 +21,9 @@ func (app Application) Run() {
 	dbConnection := service.ConnectToDatabase()
 	websocketService := service.NewWebsocketService()
 
+	defer close(service.NewWebsocketService().ErrorChan)
+	defer close(service.NewWebsocketService().BroadcastChan)
+
 	userDataAccess := dataAccess.NewUserDataAccess(dbConnection)
 	productDataAccess := dataAccess.NewProductDataAccess(dbConnection)
 
@@ -41,10 +44,6 @@ func (app Application) Run() {
 
 	mux.Handle("/auth/", http.StripPrefix("/auth", authMux))
 	mux.Handle("/user/", http.StripPrefix("/user", userMux)) 
-	// I don't think you need to strip the prefix
-	// Hadis => You mean it's bad design or in a techical way?
-	//			As far as I can see I need it since i plan to send requests to /user/xxx
-	//			Since that would be a RESTFUL design
 	mux.Handle("/product/", http.StripPrefix("/product", productMux))
 
 	mux.Handle("/chat", wsChantHandler)

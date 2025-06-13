@@ -36,7 +36,7 @@ func checkPassword(password string, hash string) bool {
 	return true
 }
 
-func generateJWTLoginToken (user *models.User) (string, error) {
+func generateJWTLoginToken (user *dataAccess.FoundUserReponse) (string, error) {
 	secret := util.GetEnvVariable("JWT_LOGIN_TOKEN_SECRET")
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, 
@@ -44,6 +44,8 @@ func generateJWTLoginToken (user *models.User) (string, error) {
 		"id": user.ID,
         "username": user.Username,
 		"email": user.Email,
+		"created_on": user.CreatedOn,
+		"updated_on": user.UpdatedOn,
         "exp": time.Now().Add(time.Hour * 24).Unix(), 
         })
 
@@ -60,7 +62,7 @@ type AuthDomain struct {
 	userDataAccess dataAccess.IUserDataAccess
 }
 
-func NewAuthDomain(userDataAccess *dataAccess.UserDataAccess) *AuthDomain {
+func NewAuthDomain(userDataAccess dataAccess.IUserDataAccess) *AuthDomain {
 	return &AuthDomain{userDataAccess: userDataAccess}
 }
 
@@ -77,9 +79,6 @@ func (ad *AuthDomain) RegisterUser(user models.User) error {
 	}
 
 	hash, err := hashPassword(user.Password) 
-	
-	// Nice, this is standard for saving all user passwords
-	// Hadis => Thanks :)
 
 	if err != nil {
 		return err

@@ -3,7 +3,7 @@ package application
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
@@ -27,10 +27,8 @@ func (ur UserRouteHandler) HandleDeleteUser(w http.ResponseWriter, r *http.Reque
 
 	const MAX_SIZE_FOR_REQUEST_PAYLOAD = 64
 	var deleteUserJsonBody DeleteUserJsonBody
-
-	fmt.Println(deleteUserJsonBody)
 	
-	if err := json.NewDecoder(r.Body,).Decode(&deleteUserJsonBody); err != nil {
+	if err := json.NewDecoder(io.LimitReader(r.Body, MAX_SIZE_FOR_REQUEST_PAYLOAD)).Decode(&deleteUserJsonBody); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 
 		return
@@ -62,11 +60,7 @@ func (ur UserRouteHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Reque
 
 		return
 	} else if err = ur.userDomain.HandleUpdateUser(updateUserRequestJsonBody); err != nil { 
-		// golang is a bit different here. If you want, you can change your else/if together, they will execute in sequence until they reach an error or the end
-		// This would be different styling in the same project though, so I would choose something and be consistent.
-		// A more complex example here: https://github.com/SilicalNZ/wikia/blob/master/services/discord/controllers/entrypoint/main.go#L96
-
-		// Hadis => I didnt quite understand this comment maybe a call would be nice here.
+		
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return

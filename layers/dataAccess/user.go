@@ -13,12 +13,21 @@ type UpdateUserRequest struct {
 	Email    string `json:"email"`
 }
 
+type FoundUserReponse struct {
+	ID models.UserId `json:"id"`
+	Username string `json:"username"`
+	Email string `json:"email"`
+	CreatedOn string `json:"created_on"`
+	UpdatedOn string `json:"updated_on"`
+	Password string
+}
+
 type IUserDataAccess interface {
 	CreateUser(user models.User) error
 	DeleteUser(id int) error
 	UpdateUser(updateUserRequest UpdateUserRequest) error
-	GetUserByUsernameOrEmail(user models.User) (*models.User, error)
-	GetUserById(id int) (*models.User, error)
+	GetUserByUsernameOrEmail(user models.User) (*FoundUserReponse, error)
+	GetUserById(id int) (*FoundUserReponse, error)
 }
 
 type UserDataAccess struct {
@@ -81,9 +90,10 @@ func (da UserDataAccess) UpdateUser(updateUserRequest UpdateUserRequest) error {
 	return nil
 }
 
-func (da UserDataAccess) GetUserByUsernameOrEmail(user models.User) (*models.User, error) {
+func (da UserDataAccess) GetUserByUsernameOrEmail(user models.User) (*FoundUserReponse, error) {
 	query := "SELECT * FROM User WHERE username = ? OR email = ?"
-	var foundUser models.User
+	
+	var foundUserReponse FoundUserReponse
 
 	if (user.Username == "" && user.Email == "") {
 		return nil, ErrorMissingUsernameOrEmail
@@ -91,18 +101,18 @@ func (da UserDataAccess) GetUserByUsernameOrEmail(user models.User) (*models.Use
 
 	row := da.dbConnection.QueryRow(query, user.Username, user.Email)
 
-	err := row.Scan(&foundUser.ID, &foundUser.Username, &foundUser.Email, &foundUser.Password)
+	err := row.Scan(&foundUserReponse.ID, &foundUserReponse.Username, &foundUserReponse.Email, &foundUserReponse.Password, &foundUserReponse.CreatedOn, &foundUserReponse.UpdatedOn)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &foundUser, nil
+	return &foundUserReponse, nil
 }
 
-func (da UserDataAccess) GetUserById(id int) (*models.User, error) {
+func (da UserDataAccess) GetUserById(id int) (*FoundUserReponse, error) {
 	query := "SELECT * FROM User WHERE id = ?"
-	var foundUser models.User
+	var foundUserReponse FoundUserReponse
 
 	if (id == 0) {
 		return nil, ErrorMissingID
@@ -110,10 +120,13 @@ func (da UserDataAccess) GetUserById(id int) (*models.User, error) {
 
 	row := da.dbConnection.QueryRow(query, id)
 
+	err := row.Scan(&foundUserReponse.ID, &foundUserReponse.Username, &foundUserReponse.Email, &foundUserReponse.Password, &foundUserReponse.CreatedOn, &foundUserReponse.UpdatedOn)
+
+
 	
-	if err := row.Scan(&foundUser.ID, &foundUser.Username, &foundUser.Email, &foundUser.Password); err != nil {
+	if err != nil {
 		return nil, ErrorUserNotFound
 	}
 
-	return &foundUser, nil
+	return &foundUserReponse, nil
 }

@@ -10,7 +10,7 @@ type UserDomain struct {
 	userDataAccess dataAccess.IUserDataAccess
 }
 
-func NewUserDomain(userDataAccess *dataAccess.UserDataAccess) *UserDomain {
+func NewUserDomain(userDataAccess dataAccess.IUserDataAccess) *UserDomain {
 	return &UserDomain{userDataAccess: userDataAccess}
 }
 

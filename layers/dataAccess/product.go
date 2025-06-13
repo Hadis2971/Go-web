@@ -27,15 +27,16 @@ func NewProductDataAccess(dbConnection *sql.DB) *ProductDataAccess {
 	return &ProductDataAccess{dbConnection: dbConnection}
 }
 
-func (pda *ProductDataAccess) CreateProduct(product *models.Product)  error {
+func (pda *ProductDataAccess) CreateProduct(product *models.CreateProductReq)  error {
 
-	query := "INSERT INTO PRODUCT (product_name, price, description, stock) VALUES (?, ?, ?, ?)"
+	query := "INSERT INTO Product (product_name, price, description, stock) VALUES (?, ?, ?, ?)"
 
 	if (product.Name == "" || product.Price == 0 || product.Description == "" || product.Stock == 0) {
 		return ErrorCreateProductMissingFields
 	}
 
-	_, err := pda.dbConnection.Query(query, product.Name, product.Price, product.Description, product.Stock)
+	_, err := pda.dbConnection.Exec(query, product.Name, product.Price, product.Description, product.Stock)
+
 
 	if err != nil {
 		return ErrorCreateProduct
@@ -52,6 +53,7 @@ func (pda *ProductDataAccess) GetAllProducts() ([]models.Product, error) {
 
 	rows, err := pda.dbConnection.Query(query)
 
+
 	defer rows.Close()
 
 	if err != nil {
@@ -60,8 +62,8 @@ func (pda *ProductDataAccess) GetAllProducts() ([]models.Product, error) {
 
 	
 	for rows.Next() {
-		err := rows.Scan(&product)
-
+		err := rows.Scan(&product.ID, &product.Name, &product.Price, &product.Description, &product.Stock, &product.CreatedOn, &product.UpdatedOn)
+		
 		if err != nil {
 			return nil, ErrorGetAllProducts
 		}
@@ -83,7 +85,7 @@ func (pda *ProductDataAccess) GetProductById(id models.ProductId) (*models.Produ
 
 	row := pda.dbConnection.QueryRow(query, id)
 
-	err := row.Scan(&product)
+	err := row.Scan(&product.ID, &product.Name, &product.Price, &product.Description, &product.Stock, &product.CreatedOn, &product.UpdatedOn)
 
 	if err != nil {
 		return nil, ErrorGetProductById
@@ -115,7 +117,7 @@ func (pda *ProductDataAccess) UpdateProduct(product models.Product) error {
 		return ErrorUpdateProductMissingFields
 	}
 
-	_, err := pda.dbConnection.Exec(query, product.ID, product.Name, product.Price, product.Description)
+	_, err := pda.dbConnection.Exec(query, product.Name, product.Price, product.Description, product.Stock, product.ID)
 
 	if err != nil {
 		return ErrorUpdateProduct

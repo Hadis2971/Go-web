@@ -21,7 +21,7 @@ func NewProductRoutes(productDomain *domain.ProductDomain) *ProductRoutes {
 }
 
 func (pr *ProductRoutes) HandleCreateProduct(w http.ResponseWriter, r *http.Request) {
-	var createProductJsonBoby models.Product
+	var createProductJsonBoby models.CreateProductReq
 
 	err := json.NewDecoder(r.Body).Decode(&createProductJsonBoby)
 
@@ -186,8 +186,8 @@ func (pr *ProductRoutes) RegisterRoutes() *http.ServeMux {
 	authMiddleware := middlewares.NewAuthMiddleware()
 
 	pr.mux.HandleFunc("POST /create/", authMiddleware.WithHttpRouthAuthentication(pr.HandleCreateProduct))
-	pr.mux.HandleFunc("POST /list/", authMiddleware.WithHttpRouthAuthentication(pr.HandleGetAllProducts))
-	pr.mux.HandleFunc("POST /list/product", authMiddleware.WithHttpRouthAuthentication(pr.HandleGetProductById))
+	pr.mux.HandleFunc("GET /list/", authMiddleware.WithHttpRouthAuthentication(pr.HandleGetAllProducts))
+	pr.mux.HandleFunc("POST /list/", authMiddleware.WithHttpRouthAuthentication(pr.HandleGetProductById))
 	pr.mux.HandleFunc("POST /delete/", authMiddleware.WithHttpRouthAuthentication(pr.HandleDeleteProduct))
 	pr.mux.HandleFunc("POST /update/", authMiddleware.WithHttpRouthAuthentication(pr.HandleUpdateProduct))
 
