@@ -3,10 +3,12 @@ package application
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
 	"github.com/Hadis2971/go_web/layers/domain"
+	"github.com/Hadis2971/go_web/layers/service"
 	"github.com/Hadis2971/go_web/middlewares"
 	"github.com/Hadis2971/go_web/models"
 )
@@ -14,16 +16,19 @@ import (
 type ProductRoutes struct {
 	mux *http.ServeMux
 	productDomain *domain.ProductDomain
+	wsProductDomain *domain.WsProductDomain
 }
 
-func NewProductRoutes(productDomain *domain.ProductDomain) *ProductRoutes {
-	return &ProductRoutes{mux: http.NewServeMux(), productDomain: productDomain}
+func NewProductRoutes(productDomain *domain.ProductDomain, wsProductDomain *domain.WsProductDomain) *ProductRoutes {
+	return &ProductRoutes{mux: http.NewServeMux(), productDomain: productDomain, wsProductDomain: wsProductDomain}
 }
 
-func (pr *ProductRoutes) HandleCreateProduct(w http.ResponseWriter, r *http.Request) {
-	var createProductJsonBoby models.CreateProductReq
+func (pr ProductRoutes) HandleCreateProduct(w http.ResponseWriter, r *http.Request) {
+	var createProductJsonBody models.CreateProductReq
 
-	err := json.NewDecoder(r.Body).Decode(&createProductJsonBoby)
+	err := json.NewDecoder(r.Body).Decode(&createProductJsonBody)
+
+	fmt.Println(createProductJsonBody)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -31,7 +36,7 @@ func (pr *ProductRoutes) HandleCreateProduct(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = pr.productDomain.HandleCreateProduct(createProductJsonBoby)
+	newProductResult, err := pr.productDomain.HandleCreateProduct(createProductJsonBody)
 	
 
 	if errors.Is(err, dataAccess.ErrorCreateProduct) {
@@ -45,6 +50,26 @@ func (pr *ProductRoutes) HandleCreateProduct(w http.ResponseWriter, r *http.Requ
 
 		return
 	}
+
+	id, _ := newProductResult.LastInsertId()
+
+	fmt.Println("newProductResult.LastInsertId", id)
+
+	newProduct := models.Product{
+		ID: models.ProductId(id),
+		Name: createProductJsonBody.Name,
+		Description: createProductJsonBody.Description,
+		Price: float64(createProductJsonBody.Price),
+		Stock: createProductJsonBody.Stock,
+	}
+
+	wsMessage := service.ProductWsMessage{ID: createProductJsonBody.ID, Topic: "product_update_message", Product: newProduct}
+
+	fmt.Println("wsMessage", wsMessage)
+
+	fmt.Println("pr.wsProductDomain.HandleWsProductBroadcastMsg", pr.wsProductDomain)
+
+	pr.wsProductDomain.HandleWsProductBroadcastMsg(wsMessage)
 
 	w.WriteHeader(http.StatusOK)
 

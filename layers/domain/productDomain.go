@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"database/sql"
 	"errors"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
@@ -15,18 +16,18 @@ func NewProductDomain(productDataAccess *dataAccess.ProductDataAccess) *ProductD
 	return &ProductDomain{productDataAccess: productDataAccess}
 }
 
-func (pd *ProductDomain) HandleCreateProduct(product models.CreateProductReq) error {
-	err := pd.productDataAccess.CreateProduct(&product)
+func (pd *ProductDomain) HandleCreateProduct(product models.CreateProductReq) (sql.Result, error) {
+	newProduct, err := pd.productDataAccess.CreateProduct(&product)
 
 	if errors.Is(err, dataAccess.ErrorCreateProduct) {
-		return dataAccess.ErrorCreateProduct
+		return nil, dataAccess.ErrorCreateProduct
 	}
 
 	if errors.Is(err, dataAccess.ErrorCreateProductMissingFields) {
-		return dataAccess.ErrorCreateProductMissingFields
+		return nil, dataAccess.ErrorCreateProductMissingFields
 	}
 
-	return nil
+	return newProduct, nil
 }
 
 func (pd *ProductDomain) HandleGetAllProducts() ([]models.Product, error) {

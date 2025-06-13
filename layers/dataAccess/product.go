@@ -3,6 +3,7 @@ package dataAccess
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/Hadis2971/go_web/models"
 )
@@ -27,23 +28,24 @@ func NewProductDataAccess(dbConnection *sql.DB) *ProductDataAccess {
 	return &ProductDataAccess{dbConnection: dbConnection}
 }
 
-func (pda *ProductDataAccess) CreateProduct(product *models.CreateProductReq)  error {
+func (pda *ProductDataAccess) CreateProduct(product *models.CreateProductReq) (sql.Result, error) {
 
 	query := "INSERT INTO Product (product_name, price, description, stock) VALUES (?, ?, ?, ?)"
 
 	if (product.Name == "" || product.Price == 0 || product.Description == "" || product.Stock == 0) {
-		return ErrorCreateProductMissingFields
+		return nil, ErrorCreateProductMissingFields
 	}
 
-	_, err := pda.dbConnection.Exec(query, product.Name, product.Price, product.Description, product.Stock)
+	newProduct, err := pda.dbConnection.Exec(query, product.Name, product.Price, product.Description, product.Stock)
 
+	fmt.Println(err)
 
 	if err != nil {
-		return ErrorCreateProduct
+		return nil, ErrorCreateProduct
 	}
 
 
-	return nil
+	return newProduct, nil
 }
 
 func (pda *ProductDataAccess) GetAllProducts() ([]models.Product, error) {
