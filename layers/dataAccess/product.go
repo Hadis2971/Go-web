@@ -97,20 +97,20 @@ func (pda *ProductDataAccess) GetProductById(id models.ProductId) (*models.Produ
 	return &product, nil
 }
 
-func (pda *ProductDataAccess) DeleteProduct(id models.ProductId) error {
+func (pda *ProductDataAccess) DeleteProduct(id models.ProductId) (sql.Result, error) {
 	query := "DELETE FROM Product Where id = ?"
 
 	if id == 0 {
-		return ErrorDeleteProductMissingId
+		return nil, ErrorDeleteProductMissingId
 	}
 
-	_, err := pda.dbConnection.Exec(query, id)
+	sqlResult, err := pda.dbConnection.Exec(query, id)
 
 	if err != nil {
-		return ErrorDeleteProduct
+		return nil, ErrorDeleteProduct
 	}
 
-	return nil
+	return sqlResult, nil
 }
 
 func (pda *ProductDataAccess) UpdateProduct(product models.UpdateProductReq) (sql.Result, error) {

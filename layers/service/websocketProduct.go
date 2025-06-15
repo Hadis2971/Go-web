@@ -5,6 +5,11 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+type DeleteProductWsMsg struct {
+	ID string `json:"id"`
+	Topic string `json:"topic"`
+}
+
 type ProductWsMessage struct {
 	ID string `json:"id"`
 	Topic string `json:"topic"`

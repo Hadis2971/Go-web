@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
 	"github.com/Hadis2971/go_web/layers/domain"
@@ -162,7 +163,7 @@ func (pr *ProductRoutes) HandleDeleteProduct(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = pr.productDomain.HandleDeleteProduct(deleteProductJsonBody.ID)
+	deletedProductReesult, err := pr.productDomain.HandleDeleteProduct(deleteProductJsonBody.ID)
 
 	if errors.Is(err, dataAccess.ErrorDeleteProduct) {
 		http.Error(w, dataAccess.ErrorDeleteProduct.Error(), http.StatusInternalServerError)
@@ -175,6 +176,15 @@ func (pr *ProductRoutes) HandleDeleteProduct(w http.ResponseWriter, r *http.Requ
 		
 		return 
 	}
+
+	 id, _ := deletedProductReesult.LastInsertId()
+
+	 strId := strconv.Itoa(int(id))
+
+	 wsMessage := service.ProductWsMessage{ID: strId, Topic: "product_delete_message"}
+
+	 pr.wsProductDomain.HandleWsProductBroadcastMsg(wsMessage)
+
 
 	w.WriteHeader(http.StatusOK)
 }
