@@ -25,7 +25,7 @@ func NewProductRoutes(productDomain *domain.ProductDomain, wsProductDomain *doma
 }
 
 func (pr ProductRoutes) HandleCreateProduct(w http.ResponseWriter, r *http.Request) {
-	var createProductJsonBody models.CreateProductReq
+	var createProductJsonBody models.ProductReqPayload
 
 	err := json.NewDecoder(r.Body).Decode(&createProductJsonBody)
 
@@ -37,7 +37,7 @@ func (pr ProductRoutes) HandleCreateProduct(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	newProductResult, err := pr.productDomain.HandleCreateProduct(createProductJsonBody)
+	newProduct, err := pr.productDomain.HandleCreateProduct(createProductJsonBody)
 	
 
 	if errors.Is(err, dataAccess.ErrorCreateProduct) {
@@ -52,23 +52,7 @@ func (pr ProductRoutes) HandleCreateProduct(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	id, _ := newProductResult.LastInsertId()
-
-	fmt.Println("newProductResult.LastInsertId", id)
-
-	newProduct := models.Product{
-		ID: models.ProductId(id),
-		Name: createProductJsonBody.Name,
-		Description: createProductJsonBody.Description,
-		Price: float64(createProductJsonBody.Price),
-		Stock: createProductJsonBody.Stock,
-	}
-
-	wsMessage := service.ProductWsMessage{ID: createProductJsonBody.ID, Topic: "product_update_message", Product: newProduct}
-
-	fmt.Println("wsMessage", wsMessage)
-
-	fmt.Println("pr.wsProductDomain.HandleWsProductBroadcastMsg", pr.wsProductDomain)
+	wsMessage := service.ProductWsMessage{ID: createProductJsonBody.ID, Topic: "product_update_message", Product: *newProduct}
 
 	pr.wsProductDomain.HandleWsProductBroadcastMsg(wsMessage)
 
@@ -163,7 +147,7 @@ func (pr *ProductRoutes) HandleDeleteProduct(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	deletedProductReesult, err := pr.productDomain.HandleDeleteProduct(deleteProductJsonBody.ID)
+	err = pr.productDomain.HandleDeleteProduct(deleteProductJsonBody.ID)
 
 	if errors.Is(err, dataAccess.ErrorDeleteProduct) {
 		http.Error(w, dataAccess.ErrorDeleteProduct.Error(), http.StatusInternalServerError)
@@ -177,20 +161,17 @@ func (pr *ProductRoutes) HandleDeleteProduct(w http.ResponseWriter, r *http.Requ
 		return 
 	}
 
-	 id, _ := deletedProductReesult.LastInsertId()
+	id := strconv.Itoa(int(deleteProductJsonBody.ID))
 
-	 strId := strconv.Itoa(int(id))
+	wsMessage := service.ProductWsMessage{ID: id, Topic: "product_delete_message"}
 
-	 wsMessage := service.ProductWsMessage{ID: strId, Topic: "product_delete_message"}
-
-	 pr.wsProductDomain.HandleWsProductBroadcastMsg(wsMessage)
-
+	pr.wsProductDomain.HandleWsProductBroadcastMsg(wsMessage)
 
 	w.WriteHeader(http.StatusOK)
 }
 
 func (pr *ProductRoutes) HandleUpdateProduct(w http.ResponseWriter, r *http.Request) {
-	var updateProductJsonBody models.UpdateProductReq
+	var updateProductJsonBody models.ProductReqPayload
 
 	err := json.NewDecoder(r.Body).Decode(&updateProductJsonBody)
 
@@ -200,7 +181,7 @@ func (pr *ProductRoutes) HandleUpdateProduct(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	updatedProductResult, err := pr.productDomain.HandleUpdateProduct(updateProductJsonBody)
+	updatedProduct, err := pr.productDomain.HandleUpdateProduct(updateProductJsonBody)
 
 	if errors.Is(err, dataAccess.ErrorUpdateProduct) {
 		http.Error(w, dataAccess.ErrorUpdateProduct.Error(), http.StatusInternalServerError)
@@ -214,23 +195,7 @@ func (pr *ProductRoutes) HandleUpdateProduct(w http.ResponseWriter, r *http.Requ
 		return 
 	}
 
-	id, _ := updatedProductResult.LastInsertId()
-
-	fmt.Println("newProductResult.LastInsertId", id)
-
-	updatedProduct := models.Product{
-		ID: models.ProductId(id),
-		Name: updateProductJsonBody.Name,
-		Description: updateProductJsonBody.Description,
-		Price: float64(updateProductJsonBody.Price),
-		Stock: updateProductJsonBody.Stock,
-	}
-
-	wsMessage := service.ProductWsMessage{ID: updateProductJsonBody.ID, Topic: "product_update_message", Product: updatedProduct}
-
-	fmt.Println("wsMessage", wsMessage)
-
-	fmt.Println("pr.wsProductDomain.HandleWsProductBroadcastMsg", pr.wsProductDomain)
+	wsMessage := service.ProductWsMessage{ID: updateProductJsonBody.ID, Topic: "product_update_message", Product: *updatedProduct}
 
 	pr.wsProductDomain.HandleWsProductBroadcastMsg(wsMessage)
 

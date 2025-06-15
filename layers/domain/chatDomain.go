@@ -9,11 +9,11 @@ import (
 )
 
 type ChatDomain struct {
-	websocket *service.WebsocketService
+	websocket *service.WebsocketChatService
 	mutex     sync.Mutex
 }
 
-func NewChatDomain(websocket *service.WebsocketService) *ChatDomain {
+func NewChatDomain(websocket *service.WebsocketChatService) *ChatDomain {
 	return &ChatDomain{websocket: websocket}
 }
 
@@ -30,8 +30,6 @@ func (cd *ChatDomain) AddNewClient(id string, conn *websocket.Conn) {
 		cd.websocket.Clients[id][conn] = true
 	}
 
-	
-	
 	// There's no authentication for this, so you can end up with infinite connections.
 	// Hadis => How would I do the auth? How can I comapre 2 ws conns?
 
@@ -51,7 +49,7 @@ func (cd *ChatDomain) AddNewClient(id string, conn *websocket.Conn) {
 	//			start for it and do a return
 
 	for {
-		var message service.Message
+		var message service.ChatWsMessage
 
 		if err := websocket.JSON.Receive(conn, &message); err != nil {
 			conn.Close()
@@ -91,7 +89,7 @@ func (cd *ChatDomain) start() {
 	}
 }
 
-func (cd *ChatDomain) handleBroadcastMsg(msg service.Message) {
+func (cd *ChatDomain) handleBroadcastMsg(msg service.ChatWsMessage) {
 	clients := cd.websocket.Clients[msg.ID]
 
 	for client := range clients {

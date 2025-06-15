@@ -29,7 +29,7 @@ func NewProductDataAccess(dbConnection *sql.DB) *ProductDataAccess {
 	return &ProductDataAccess{dbConnection: dbConnection}
 }
 
-func (pda *ProductDataAccess) CreateProduct(product *models.CreateProductReq) (sql.Result, error) {
+func (pda *ProductDataAccess) CreateProduct(product *models.ProductReqPayload) (sql.Result, error) {
 
 	query := "INSERT INTO Product (product_name, price, description, stock) VALUES (?, ?, ?, ?)"
 
@@ -97,23 +97,23 @@ func (pda *ProductDataAccess) GetProductById(id models.ProductId) (*models.Produ
 	return &product, nil
 }
 
-func (pda *ProductDataAccess) DeleteProduct(id models.ProductId) (sql.Result, error) {
+func (pda *ProductDataAccess) DeleteProduct(id models.ProductId) error {
 	query := "DELETE FROM Product Where id = ?"
 
 	if id == 0 {
-		return nil, ErrorDeleteProductMissingId
+		return ErrorDeleteProductMissingId
 	}
 
-	sqlResult, err := pda.dbConnection.Exec(query, id)
+	_, err := pda.dbConnection.Exec(query, id)
 
 	if err != nil {
-		return nil, ErrorDeleteProduct
+		return ErrorDeleteProduct
 	}
 
-	return sqlResult, nil
+	return nil
 }
 
-func (pda *ProductDataAccess) UpdateProduct(product models.UpdateProductReq) (sql.Result, error) {
+func (pda *ProductDataAccess) UpdateProduct(product models.ProductReqPayload) (sql.Result, error) {
 	query := "UPDATE Product SET product_name = ?, price = ?, description = ?, stock = ? WHERE id = ?"
 
 	if (product.ID == "" || product.Name == "" || product.Price == 0 || product.Description == "") {

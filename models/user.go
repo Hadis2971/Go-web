@@ -12,19 +12,3 @@ type User struct {
 	CreatedOn time.Time `json:"created_on"`
 	UpdatedOn time.Time `json:"updated_on"`
 }
-
-type CreateProductReq struct {
-	ID string 	`json:"id"`
-	Name string `json:"name"`
-	Description string `json:"description"`
-	Price int `json:"price"`
-	Stock int `json:"stock"`
-}
-
-type UpdateProductReq struct {
-	ID string 	`json:"id"`
-	Name string `json:"name"`
-	Description string `json:"description"`
-	Price int `json:"price"`
-	Stock int `json:"stock"`
-}

@@ -2,21 +2,21 @@ package service
 
 import "golang.org/x/net/websocket"
 
-type Message struct {
+type ChatWsMessage struct {
 	ID   string `json:"id"`
 	Text string `json:"text"`
 }
 
-type WebsocketService struct {
+type WebsocketChatService struct {
 	Clients       map[string]map[*websocket.Conn]bool
-	BroadcastChan chan Message
+	BroadcastChan chan ChatWsMessage
 	ErrorChan chan bool
 }
 
-func NewWebsocketService() *WebsocketService {
-	return &WebsocketService{
+func NewWebsocketService() *WebsocketChatService {
+	return &WebsocketChatService{
 		Clients:       make(map[string]map[*websocket.Conn]bool),
-		BroadcastChan: make(chan Message),
+		BroadcastChan: make(chan ChatWsMessage),
 		ErrorChan: make(chan bool),
 	}
 }

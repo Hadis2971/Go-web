@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"database/sql"
 	"errors"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
@@ -16,8 +15,18 @@ func NewProductDomain(productDataAccess *dataAccess.ProductDataAccess) *ProductD
 	return &ProductDomain{productDataAccess: productDataAccess}
 }
 
-func (pd *ProductDomain) HandleCreateProduct(product models.CreateProductReq) (sql.Result, error) {
-	newProduct, err := pd.productDataAccess.CreateProduct(&product)
+func (pd *ProductDomain) HandleCreateProduct(product models.ProductReqPayload) (*models.Product, error) {
+	sqlResult, err := pd.productDataAccess.CreateProduct(&product)
+
+	id, _ := sqlResult.LastInsertId()
+
+	newProduct := models.Product{
+		ID: models.ProductId(id),
+		Name: product.Name,
+		Description: product.Description,
+		Price: float64(product.Price),
+		Stock: product.Stock,
+	}
 
 	if errors.Is(err, dataAccess.ErrorCreateProduct) {
 		return nil, dataAccess.ErrorCreateProduct
@@ -27,7 +36,7 @@ func (pd *ProductDomain) HandleCreateProduct(product models.CreateProductReq) (s
 		return nil, dataAccess.ErrorCreateProductMissingFields
 	}
 
-	return newProduct, nil
+	return &newProduct, nil
 }
 
 func (pd *ProductDomain) HandleGetAllProducts() ([]models.Product, error) {
@@ -54,22 +63,34 @@ func (pd *ProductDomain) HandleGetProductById(id models.ProductId) (*models.Prod
 	return product, nil
 }
 
-func (pd *ProductDomain) HandleDeleteProduct(id models.ProductId) (sql.Result, error) {
-	sqlResult, err := pd.productDataAccess.DeleteProduct(id)
+func (pd *ProductDomain) HandleDeleteProduct(id models.ProductId) error {
+	err := pd.productDataAccess.DeleteProduct(id)
+
+
 
 	if errors.Is(err, dataAccess.ErrorDeleteProduct) {
-		return nil, dataAccess.ErrorDeleteProduct
+		return dataAccess.ErrorDeleteProduct
 	}
 
 	if errors.Is(err, dataAccess.ErrorDeleteProductMissingId) {
-		return nil, dataAccess.ErrorDeleteProductMissingId
+		return dataAccess.ErrorDeleteProductMissingId
 	}
 
-	return sqlResult, nil
+	return nil
 }
 
-func (pd *ProductDomain) HandleUpdateProduct(product models.UpdateProductReq) (sql.Result, error) {
+func (pd *ProductDomain) HandleUpdateProduct(product models.ProductReqPayload) (*models.Product, error) {
 	sqlResult, err := pd.productDataAccess.UpdateProduct(product)
+
+	id, _ := sqlResult.LastInsertId()
+
+	newProduct := models.Product{
+		ID: models.ProductId(id),
+		Name: product.Name,
+		Description: product.Description,
+		Price: float64(product.Price),
+		Stock: product.Stock,
+	}
 
 	if errors.Is(err, dataAccess.ErrorUpdateProduct) {
 		return nil, dataAccess.ErrorUpdateProduct
@@ -79,5 +100,5 @@ func (pd *ProductDomain) HandleUpdateProduct(product models.UpdateProductReq) (s
 		return nil,dataAccess.ErrorUpdateProductMissingFields
 	}
 
-	return sqlResult, nil
+	return &newProduct, nil
 }
