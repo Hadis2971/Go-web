@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/Hadis2971/go_web/models"
 )
@@ -112,18 +113,20 @@ func (pda *ProductDataAccess) DeleteProduct(id models.ProductId) error {
 	return nil
 }
 
-func (pda *ProductDataAccess) UpdateProduct(product models.Product) error {
+func (pda *ProductDataAccess) UpdateProduct(product models.UpdateProductReq) (sql.Result, error) {
 	query := "UPDATE Product SET product_name = ?, price = ?, description = ?, stock = ? WHERE id = ?"
 
-	if (product.ID == 0 || product.Name == "" || product.Price == 0 || product.Description == "") {
-		return ErrorUpdateProductMissingFields
+	if (product.ID == "" || product.Name == "" || product.Price == 0 || product.Description == "") {
+		return nil, ErrorUpdateProductMissingFields
 	}
 
-	_, err := pda.dbConnection.Exec(query, product.Name, product.Price, product.Description, product.Stock, product.ID)
+	id, _ := strconv.Atoi(product.ID)
+
+	sqlResult, err := pda.dbConnection.Exec(query, product.Name, product.Price, product.Description, product.Stock, id)
 
 	if err != nil {
-		return ErrorUpdateProduct
+		return nil, ErrorUpdateProduct
 	}
 
-	return nil
+	return sqlResult, nil
 }

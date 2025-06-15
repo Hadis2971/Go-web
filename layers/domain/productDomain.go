@@ -68,16 +68,16 @@ func (pd *ProductDomain) HandleDeleteProduct(id models.ProductId) error {
 	return nil
 }
 
-func (pd *ProductDomain) HandleUpdateProduct(product models.Product) error {
-	err := pd.productDataAccess.UpdateProduct(product)
+func (pd *ProductDomain) HandleUpdateProduct(product models.UpdateProductReq) (sql.Result, error) {
+	sqlResult, err := pd.productDataAccess.UpdateProduct(product)
 
 	if errors.Is(err, dataAccess.ErrorUpdateProduct) {
-		return dataAccess.ErrorUpdateProduct
+		return nil, dataAccess.ErrorUpdateProduct
 	}
 
 	if errors.Is(err, dataAccess.ErrorUpdateProductMissingFields) {
-		return dataAccess.ErrorUpdateProductMissingFields
+		return nil,dataAccess.ErrorUpdateProductMissingFields
 	}
 
-	return nil
+	return sqlResult, nil
 }

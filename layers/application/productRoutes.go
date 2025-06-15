@@ -180,7 +180,7 @@ func (pr *ProductRoutes) HandleDeleteProduct(w http.ResponseWriter, r *http.Requ
 }
 
 func (pr *ProductRoutes) HandleUpdateProduct(w http.ResponseWriter, r *http.Request) {
-	var updateProductJsonBody models.Product
+	var updateProductJsonBody models.UpdateProductReq
 
 	err := json.NewDecoder(r.Body).Decode(&updateProductJsonBody)
 
@@ -190,7 +190,7 @@ func (pr *ProductRoutes) HandleUpdateProduct(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = pr.productDomain.HandleUpdateProduct(updateProductJsonBody)
+	updatedProductResult, err := pr.productDomain.HandleUpdateProduct(updateProductJsonBody)
 
 	if errors.Is(err, dataAccess.ErrorUpdateProduct) {
 		http.Error(w, dataAccess.ErrorUpdateProduct.Error(), http.StatusInternalServerError)
@@ -203,6 +203,26 @@ func (pr *ProductRoutes) HandleUpdateProduct(w http.ResponseWriter, r *http.Requ
 		
 		return 
 	}
+
+	id, _ := updatedProductResult.LastInsertId()
+
+	fmt.Println("newProductResult.LastInsertId", id)
+
+	updatedProduct := models.Product{
+		ID: models.ProductId(id),
+		Name: updateProductJsonBody.Name,
+		Description: updateProductJsonBody.Description,
+		Price: float64(updateProductJsonBody.Price),
+		Stock: updateProductJsonBody.Stock,
+	}
+
+	wsMessage := service.ProductWsMessage{ID: updateProductJsonBody.ID, Topic: "product_update_message", Product: updatedProduct}
+
+	fmt.Println("wsMessage", wsMessage)
+
+	fmt.Println("pr.wsProductDomain.HandleWsProductBroadcastMsg", pr.wsProductDomain)
+
+	pr.wsProductDomain.HandleWsProductBroadcastMsg(wsMessage)
 
 	w.WriteHeader(http.StatusOK)
 }
