@@ -9,11 +9,11 @@ import (
 )
 
 type ChatDomain struct {
-	websocket *service.WebsocketChatService
+	websocket *service.WebsocketService[service.ChatMessage]
 	mutex     sync.Mutex
 }
 
-func NewChatDomain(websocket *service.WebsocketChatService) *ChatDomain {
+func NewChatDomain(websocket *service.WebsocketService[service.ChatMessage]) *ChatDomain {
 	return &ChatDomain{websocket: websocket}
 }
 
@@ -30,38 +30,11 @@ func (cd *ChatDomain) AddNewClient(id string, conn *websocket.Conn) {
 		cd.websocket.Clients[id][conn] = true
 	}
 
-	// There's no authentication for this, so you can end up with infinite connections.
-	// Hadis => How would I do the auth? How can I comapre 2 ws conns?
-
-	// if cd.websocket.Clients[id][conn] {
-	// 	return
-	// }
-	// Can I do something like this?
-	// It seems that golang does a deep comparison instead of a shallow. So it would work?
-
 	cd.mutex.Unlock()
 
-	go cd.start() 
+	go cd.startBroadcaseChatWsMsgs() 
+	go cd.startReceiveChatWsMsgs(conn)
 	
-	// This doesn't look correct, you have 2 golang loops, and when does this loop stop? Never?
-	// Hadis => I added a new chan for errors so I add a true values on line 37 when there is an error
-	// 			So if the client shutsdown the connection add to the chan true and then i have a case in
-	//			start for it and do a return
-
-	for {
-		var message service.ChatWsMessage
-
-		if err := websocket.JSON.Receive(conn, &message); err != nil {
-			conn.Close()
-			cd.removeClient(message.ID, conn)
-	
-			cd.websocket.ErrorChan <- true
-
-			return
-		}
-
-		cd.websocket.BroadcastChan <- message
-	}
 }
 
 func (cd *ChatDomain) removeClient(id string, conn *websocket.Conn) {
@@ -76,7 +49,7 @@ func (cd *ChatDomain) removeClient(id string, conn *websocket.Conn) {
 	cd.mutex.Unlock()
 }
 
-func (cd *ChatDomain) start() {
+func (cd *ChatDomain) startBroadcaseChatWsMsgs() {
 	for {
 		select {
 		case message := <-cd.websocket.BroadcastChan:
@@ -89,7 +62,24 @@ func (cd *ChatDomain) start() {
 	}
 }
 
-func (cd *ChatDomain) handleBroadcastMsg(msg service.ChatWsMessage) {
+func (cd *ChatDomain) startReceiveChatWsMsgs(conn *websocket.Conn) {
+	for {
+		var message service.ChatMessage
+
+		if err := websocket.JSON.Receive(conn, &message); err != nil {
+			conn.Close()
+			cd.removeClient(message.ID, conn)
+	
+			cd.websocket.ErrorChan <- true
+
+			return
+		}
+
+		cd.websocket.BroadcastChan <- message
+	}
+}
+
+func (cd *ChatDomain) handleBroadcastMsg(msg service.ChatMessage) {
 	clients := cd.websocket.Clients[msg.ID]
 
 	for client := range clients {

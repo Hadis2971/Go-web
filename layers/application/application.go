@@ -1,7 +1,6 @@
 package application
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
@@ -20,11 +19,11 @@ func NewApplication(port string) *Application {
 func (app Application) Run() {
 	mux := http.NewServeMux()
 	dbConnection := service.ConnectToDatabase()
-	websocketService := service.NewWebsocketService()
-	websocketProductService := service.NewProductWebsocketService()
+	websocketChatService := service.NewWebsocketService[service.ChatMessage]()
+	websocketProductService := service.NewWebsocketService[service.ProductMessage]()
 
-	defer close(websocketService.ErrorChan)
-	defer close(websocketService.BroadcastChan)
+	defer close(websocketChatService.ErrorChan)
+	defer close(websocketChatService.BroadcastChan)
 	defer close(websocketProductService.ErrorChan)
 	defer close(websocketProductService.BroadcastChan)
 
@@ -34,10 +33,8 @@ func (app Application) Run() {
 	authDomain := domain.NewAuthDomain(userDataAccess)
 	userDomain := domain.NewUserDomain(userDataAccess)
 	productDomain := domain.NewProductDomain(productDataAccess)
-	chatDomain := domain.NewChatDomain(websocketService)
+	chatDomain := domain.NewChatDomain(websocketChatService)
 	wsProductDomain := domain.NewWsProductDomain(websocketProductService)
-
-	fmt.Println("wsProductDomain", wsProductDomain)
 
 	authRouteHandler := NewAuthRouteHandler(authDomain)
 	userRouteHandler := NewUserRouteHandler(userDomain)

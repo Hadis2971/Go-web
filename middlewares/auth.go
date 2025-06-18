@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/Hadis2971/go_web/util"
@@ -81,14 +80,9 @@ func (am *AuthMiddleware) WithWebsocketRouthAuthentication(handler websocket.Han
 
 		authorization := r.URL.Query().Get("Authorization")
 
-		fmt.Println(authorization)
-
 		err := verifyToken(authorization)
 
-		fmt.Println(err)
-
 		if (errors.Is(err, ErrorMissingToken) || errors.Is(err, ErrorInvalidToken) || errors.Is(err, ErrorParsingToken)) {
-			fmt.Println("WTF")
 			conn.Close()
 
 			return

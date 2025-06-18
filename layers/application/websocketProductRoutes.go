@@ -1,8 +1,6 @@
 package application
 
 import (
-	"fmt"
-
 	"github.com/Hadis2971/go_web/layers/domain"
 	"github.com/Hadis2971/go_web/middlewares"
 	"golang.org/x/net/websocket"
@@ -19,8 +17,6 @@ func NewProductWebsocketRoutesHandler(productWsDomain *domain.WsProductDomain) *
 func (wsprh *WebsocketProductRoutesHandler) Handler(ws *websocket.Conn) {
 	id := ws.Request().URL.Query().Get("id")
 
-	fmt.Println("ID", id)
-
 	wsprh.productWsDomain.AddNewWsProductClient(id, ws)
 
 }
@@ -29,7 +25,6 @@ func (wsrh *WebsocketProductRoutesHandler) RegisterWsProductRoute () websocket.H
 	authMiddleware := middlewares.NewAuthMiddleware()
 
 	return authMiddleware.WithWebsocketRouthAuthentication(websocket.Handler(func(ws *websocket.Conn) {
-		fmt.Println("WS", ws)
 		wsrh.Handler(ws)
 	})) 
 }

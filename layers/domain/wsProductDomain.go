@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"sync"
 
 	"golang.org/x/net/websocket"
@@ -10,17 +9,15 @@ import (
 )
 
 type WsProductDomain struct {
-	websocket *service.ProductWebsocketService
+	websocket *service.WebsocketService[service.ProductMessage]
 	mutex     sync.Mutex
 }
 
-func NewWsProductDomain(websocket *service.ProductWebsocketService) *WsProductDomain {
+func NewWsProductDomain(websocket *service.WebsocketService[service.ProductMessage]) *WsProductDomain {
 	return &WsProductDomain{websocket: websocket}
 }
 
 func (wspd *WsProductDomain) AddNewWsProductClient(id string, conn *websocket.Conn) {
-
-	fmt.Println("HAHAH ID", id)
 
 	wspd.mutex.Lock()
 
@@ -33,8 +30,6 @@ func (wspd *WsProductDomain) AddNewWsProductClient(id string, conn *websocket.Co
 	} else {
 		wspd.websocket.Clients[id][conn] = true
 	}
-
-	fmt.Println("wspd.websocket.Clients", wspd.websocket.Clients)
 	
 	// There's no authentication for this, so you can end up with infinite connections.
 	// Hadis => How would I do the auth? How can I comapre 2 ws conns?
@@ -47,22 +42,9 @@ func (wspd *WsProductDomain) AddNewWsProductClient(id string, conn *websocket.Co
 
 	wspd.mutex.Unlock()
 
-	go wspd.startWsProductDomain()
-
-	for {
-		var message service.ProductWsMessage
-
-		if err := websocket.JSON.Receive(conn, &message); err != nil {
-			conn.Close()
-			wspd.removeWsProductClient(string(message.ID), conn)
+	go wspd.startBroadcasePorductWsMsgs()
+	go wspd.startReceiveProductWsMsgs(conn)	
 	
-			wspd.websocket.ErrorChan <- true
-
-			return
-		}
-
-		wspd.websocket.BroadcastChan <- message
-	}
 	
 }
 
@@ -78,7 +60,7 @@ func (wspd *WsProductDomain) removeWsProductClient(id string, conn *websocket.Co
 	wspd.mutex.Unlock()
 }
 
-func (wspd *WsProductDomain) startWsProductDomain() {
+func (wspd *WsProductDomain) startBroadcasePorductWsMsgs() {
 	for {
 		select {
 		case message := <-wspd.websocket.BroadcastChan:
@@ -91,14 +73,25 @@ func (wspd *WsProductDomain) startWsProductDomain() {
 	}
 }
 
-func (wspd *WsProductDomain) HandleWsProductBroadcastMsg(msg service.ProductWsMessage) {
-	fmt.Println("sasasas", msg.ID, msg.ID)
-	//fmt.Println("sasasas2", wspd.websocket.Clients)
+func (wspd *WsProductDomain) startReceiveProductWsMsgs(conn *websocket.Conn) {
+	for {
+		var message service.ProductMessage
 
-	clients := wspd.websocket.Clients[msg.ID]
+		if err := websocket.JSON.Receive(conn, &message); err != nil {
+			conn.Close()
+			wspd.removeWsProductClient(string(message.ID), conn)
 	
-	fmt.Println("wspd.websocket.Clients", wspd.websocket.Clients)
-	fmt.Println("clients", clients)
+			wspd.websocket.ErrorChan <- true
+
+			return
+		}
+
+		wspd.websocket.BroadcastChan <- message
+	}
+}
+
+func (wspd *WsProductDomain) HandleWsProductBroadcastMsg(msg service.ProductMessage) {
+	clients := wspd.websocket.Clients[msg.ID]
 
 	for client := range clients {
 		websocket.JSON.Send(client, msg)

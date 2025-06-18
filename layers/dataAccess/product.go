@@ -3,7 +3,6 @@ package dataAccess
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/Hadis2971/go_web/models"
@@ -38,8 +37,6 @@ func (pda *ProductDataAccess) CreateProduct(product *models.ProductReqPayload) (
 	}
 
 	newProduct, err := pda.dbConnection.Exec(query, product.Name, product.Price, product.Description, product.Stock)
-
-	fmt.Println(err)
 
 	if err != nil {
 		return nil, ErrorCreateProduct

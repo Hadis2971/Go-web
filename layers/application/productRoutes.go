@@ -3,7 +3,6 @@ package application
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -29,8 +28,6 @@ func (pr ProductRoutes) HandleCreateProduct(w http.ResponseWriter, r *http.Reque
 
 	err := json.NewDecoder(r.Body).Decode(&createProductJsonBody)
 
-	fmt.Println(createProductJsonBody)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -52,7 +49,7 @@ func (pr ProductRoutes) HandleCreateProduct(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	wsMessage := service.ProductWsMessage{ID: createProductJsonBody.ID, Topic: "product_update_message", Product: *newProduct}
+	wsMessage := service.ProductMessage{ID: createProductJsonBody.ID, Topic: "product_update_message", Product: *newProduct}
 
 	pr.wsProductDomain.HandleWsProductBroadcastMsg(wsMessage)
 
@@ -163,7 +160,7 @@ func (pr *ProductRoutes) HandleDeleteProduct(w http.ResponseWriter, r *http.Requ
 
 	id := strconv.Itoa(int(deleteProductJsonBody.ID))
 
-	wsMessage := service.ProductWsMessage{ID: id, Topic: "product_delete_message"}
+	wsMessage := service.ProductMessage{ID: id, Topic: "product_delete_message"}
 
 	pr.wsProductDomain.HandleWsProductBroadcastMsg(wsMessage)
 
@@ -195,7 +192,7 @@ func (pr *ProductRoutes) HandleUpdateProduct(w http.ResponseWriter, r *http.Requ
 		return 
 	}
 
-	wsMessage := service.ProductWsMessage{ID: updateProductJsonBody.ID, Topic: "product_update_message", Product: *updatedProduct}
+	wsMessage := service.ProductMessage{ID: updateProductJsonBody.ID, Topic: "product_update_message", Product: *updatedProduct}
 
 	pr.wsProductDomain.HandleWsProductBroadcastMsg(wsMessage)
 

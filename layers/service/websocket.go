@@ -5,29 +5,33 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-type DeleteProductWsMsg struct {
-	ID string `json:"id"`
-	Topic string `json:"topic"`
+
+type ChatMessage struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
 }
 
-type ProductWsMessage struct {
+type ProductMessage struct {
 	ID string `json:"id"`
 	Topic string `json:"topic"`
 	Product models.Product `json:"product"`
 }
 
-type ProductWebsocketService struct {
+type Message interface {
+	ChatMessage | ProductMessage
+}
+
+type WebsocketService[T Message] struct {
 	Clients       map[string]map[*websocket.Conn]bool
-	BroadcastChan chan ProductWsMessage
+	BroadcastChan chan T
 	ErrorChan chan bool
 }
 
-func NewProductWebsocketService() *ProductWebsocketService {
-	return &ProductWebsocketService{
+
+func NewWebsocketService[T Message]() *WebsocketService[T] {
+	return &WebsocketService[T]{
 		Clients:       make(map[string]map[*websocket.Conn]bool),
-		BroadcastChan: make(chan ProductWsMessage),
+		BroadcastChan: make(chan T),
 		ErrorChan: make(chan bool),
 	}
 }
-
-
