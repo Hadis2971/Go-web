@@ -30,7 +30,7 @@ func NewProductDataAccess(dbConnection *sql.DB) *ProductDataAccess {
 
 func (pda *ProductDataAccess) CreateProduct(product *models.ProductReqPayload) (sql.Result, error) {
 
-	query := "INSERT INTO Product (product_name, price, description, stock) VALUES (?, ?, ?, ?)"
+	query := "INSERT INTO Product (name, price, description, stock) VALUES (?, ?, ?, ?)"
 
 	if (product.Name == "" || product.Price == 0 || product.Description == "" || product.Stock == 0) {
 		return nil, ErrorCreateProductMissingFields
@@ -111,7 +111,7 @@ func (pda *ProductDataAccess) DeleteProduct(id models.ProductId) error {
 }
 
 func (pda *ProductDataAccess) UpdateProduct(product models.ProductReqPayload) (sql.Result, error) {
-	query := "UPDATE Product SET product_name = ?, price = ?, description = ?, stock = ? WHERE id = ?"
+	query := "UPDATE Product SET name = ?, price = ?, description = ?, stock = ? WHERE id = ?"
 
 	if (product.ID == "" || product.Name == "" || product.Price == 0 || product.Description == "") {
 		return nil, ErrorUpdateProductMissingFields
