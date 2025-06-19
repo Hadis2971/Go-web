@@ -7,6 +7,7 @@ type ProductOrder struct {
 	UserId UserId `json:"user_id"`
 	ProductId ProductId `json:"product_id"`
 	Quantity int `json:"quantity"`
+	OrderId int `json:"order_id"`
 	CreatedOn time.Time `json:"created_on"`
 	UpdatedOn time.Time `json:"updated_on"`
 }

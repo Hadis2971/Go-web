@@ -15,6 +15,7 @@ var (
 	ErrorCreatingProductOrder = errors.New("Error Creating Product Order")
 	ErrorUpdatingProductOrder = errors.New("Error Updating Product Order")
 	ErrorGettingUserProductOrders = errors.New("Error Getting User Product Orders")
+	ErrorGettingProductOrders = errors.New("Error Getting Product Orders")
 )
 
 func NewProductOrderDataAccess(dbConnection *sql.DB) *ProductOrder {
@@ -22,9 +23,9 @@ func NewProductOrderDataAccess(dbConnection *sql.DB) *ProductOrder {
 }
 
 func (po *ProductOrder) CreateProductOrder(productOrder models.ProductOrder) error {
-	query := "INSERT INTO Product_Order (quantity, userId, productId) VALUES(?, ?, ?)"
+	query := "INSERT INTO Product_Order (quantity, userId, productId, orderId) VALUES(?, ?, ?)"
 
-	_, err := po.dbConnection.Exec(query, productOrder.Quantity, productOrder.UserId, productOrder.ProductId)
+	_, err := po.dbConnection.Exec(query, productOrder.Quantity, productOrder.UserId, productOrder.ProductId, productOrder.OrderId)
 
 	if err != nil {
 		return ErrorCreatingProductOrder
@@ -41,6 +42,19 @@ func (po *ProductOrder) GetOrdersByUserId(userId int) error {
 	if err != nil {
 		return ErrorGettingUserProductOrders
 	}
+
+	return nil
+}
+
+func (po *ProductOrder) GetOrdersByOrderId(orderId int) error {
+	query := "SELECT * FROM Product_Order WHERE orderId = ?"
+
+	_, err := po.dbConnection.Exec(query, orderId)
+	
+	if err != nil {
+		return ErrorUpdatingProductOrder
+	}
+
 
 	return nil
 }
