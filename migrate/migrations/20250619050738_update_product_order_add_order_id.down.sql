@@ -1,0 +1,1 @@
+ALTER TABLE Product_Order DROP COLUMN orderID
