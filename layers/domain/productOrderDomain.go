@@ -1,0 +1,64 @@
+package domain
+
+import (
+	"github.com/Hadis2971/go_web/layers/dataAccess"
+	"github.com/Hadis2971/go_web/models"
+)
+
+type ProductOrderDomain struct {
+	productOrderDataAccess *dataAccess.ProductOrderDataAccess
+}
+
+func NewProductOrderDomain(productOrderDataAccess *dataAccess.ProductOrderDataAccess) *ProductOrderDomain {
+	return &ProductOrderDomain{productOrderDataAccess: productOrderDataAccess}
+}
+
+func (pod ProductOrderDomain) HandleCreateProductOrder(productOrder models.ProductOrder) error {
+	err := pod.productOrderDataAccess.CreateProductOrder(productOrder)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (pod ProductOrderDomain) HandleGetProuctOrdersByUserId(userId models.UserId) ([]models.ProductOrder, error) {
+	productOrders, err := pod.productOrderDataAccess.GetOrdersByUserId(userId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return productOrders, nil
+}
+
+func (pod ProductOrderDomain) HandleGetProductOrdersByOrderId(orderId models.OrderId) ([]models.ProductOrder, error) {
+	productOrders, err := pod.productOrderDataAccess.GetOrdersByOrderId(orderId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return productOrders, nil
+}
+
+func (pod ProductOrderDomain) HandleUpdateProductOrder(productOrder models.ProductOrder) error {
+	err := pod.productOrderDataAccess.UpdateProductOrder(productOrder)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (pod ProductOrderDomain) HandleDeleteProductOrder(productOrderId models.ProductOrderId) error {
+	err := pod.productOrderDataAccess.DeleteProductOrder(productOrderId)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

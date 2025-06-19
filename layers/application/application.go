@@ -29,28 +29,36 @@ func (app Application) Run() {
 
 	userDataAccess := dataAccess.NewUserDataAccess(dbConnection)
 	productDataAccess := dataAccess.NewProductDataAccess(dbConnection)
+	productOrderDataAccess := dataAccess.NewProductOrderDataAccess(dbConnection)
 
 	authDomain := domain.NewAuthDomain(userDataAccess)
 	userDomain := domain.NewUserDomain(userDataAccess)
 	productDomain := domain.NewProductDomain(productDataAccess)
+	productOrderDomain := domain.NewProductOrderDomain(productOrderDataAccess)
+
 	chatDomain := domain.NewChatDomain(websocketChatService)
 	wsProductDomain := domain.NewWsProductDomain(websocketProductService)
 
 	authRouteHandler := NewAuthRouteHandler(authDomain)
 	userRouteHandler := NewUserRouteHandler(userDomain)
 	productRouteHandler := NewProductRoutes(productDomain, wsProductDomain)
+	productOrderRouteHandler := NewProductOrderRoutes(productOrderDomain)
+
 	websocketRoutesHandler := NewWebsocketRoutesHandler(chatDomain)
 	wescoketProductRouteHandler := NewProductWebsocketRoutesHandler(wsProductDomain)
 
 	authMux := authRouteHandler.RegisterRoutes()
 	userMux := userRouteHandler.RegisterRoutes()
 	productMux := productRouteHandler.RegisterRoutes()
+	productOrderMux := productOrderRouteHandler.RegisterRoutes()
+
 	wsChantHandler := websocketRoutesHandler.RegisterRoute()
 	wsProductHandler := wescoketProductRouteHandler.RegisterWsProductRoute()
 
 	mux.Handle("/auth/", http.StripPrefix("/auth", authMux))
 	mux.Handle("/user/", http.StripPrefix("/user", userMux)) 
 	mux.Handle("/product/", http.StripPrefix("/product", productMux))
+	mux.Handle("/product_order/", http.StripPrefix("/product_order", productOrderMux))
 
 	mux.Handle("/chat", wsChantHandler)
 	mux.Handle("/product/ws", wsProductHandler)

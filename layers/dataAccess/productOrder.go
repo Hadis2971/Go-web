@@ -7,25 +7,43 @@ import (
 	"github.com/Hadis2971/go_web/models"
 )
 
-type ProductOrder struct {
+type ProductOrderDataAccess struct {
 	dbConnection *sql.DB
 }
 
 var (
 	ErrorCreatingProductOrder = errors.New("Error Creating Product Order")
+	ErrorProductOutOfStock = errors.New("Error Procut Out Of Stock")
 	ErrorUpdatingProductOrder = errors.New("Error Updating Product Order")
 	ErrorGettingUserProductOrders = errors.New("Error Getting User Product Orders")
 	ErrorGettingProductOrders = errors.New("Error Getting Product Orders")
+	ErrorDeletingProductOrders = errors.New("Error Deleting Product Orders")
 )
 
-func NewProductOrderDataAccess(dbConnection *sql.DB) *ProductOrder {
-	return &ProductOrder{dbConnection: dbConnection}
+func NewProductOrderDataAccess(dbConnection *sql.DB) *ProductOrderDataAccess {
+	return &ProductOrderDataAccess{dbConnection: dbConnection}
 }
 
-func (po *ProductOrder) CreateProductOrder(productOrder models.ProductOrder) error {
-	query := "INSERT INTO Product_Order (quantity, userId, productId, orderId) VALUES(?, ?, ?)"
+func (po *ProductOrderDataAccess) CreateProductOrder(productOrder models.ProductOrder) error {
+	queryCheckStock := "SELECT stock FROM Product WHERE id = ?"
+	
+	type QueryCheckStockResponse struct {
+		Stock int
+	}
 
-	_, err := po.dbConnection.Exec(query, productOrder.Quantity, productOrder.UserId, productOrder.ProductId, productOrder.OrderId)
+	queryCheckStockResponse := QueryCheckStockResponse{}
+	
+	row:= po.dbConnection.QueryRow(queryCheckStock, productOrder.ProductId)
+
+	row.Scan(queryCheckStockResponse.Stock)
+
+	if queryCheckStockResponse.Stock == 0 {
+		return ErrorProductOutOfStock
+	}
+
+	queryCreate := "INSERT INTO Product_Order (quantity, user_id, product_id, order_id) VALUES(?, ?, ?)"
+
+	_, err := po.dbConnection.Exec(queryCreate, productOrder.Quantity, productOrder.UserId, productOrder.ProductId, productOrder.OrderId)
 
 	if err != nil {
 		return ErrorCreatingProductOrder
@@ -34,38 +52,66 @@ func (po *ProductOrder) CreateProductOrder(productOrder models.ProductOrder) err
 	return nil
 }
 
-func (po *ProductOrder) GetOrdersByUserId(userId int) error {
-	query := "SELECT * FROM Product_Order WHERE userId = ?"
+func (po *ProductOrderDataAccess) GetOrdersByUserId(userId models.UserId) ([]models.ProductOrder, error) {
+	query := "SELECT * FROM Product_Order WHERE user_id = ?"
+	var productOrder models.ProductOrder
+	productOrders := []models.ProductOrder{}
 
-	_, err := po.dbConnection.Exec(query, userId)
+	rows, err := po.dbConnection.Query(query, userId)
 
-	if err != nil {
-		return ErrorGettingUserProductOrders
+	for rows.Next() {
+		rows.Scan(productOrder.ID, productOrder.Quantity, productOrder.UserId, productOrder.ProductId, productOrder.OrderId, productOrder.CreatedOn, productOrder.UpdatedOn)
+
+		productOrders = append(productOrders, productOrder)
 	}
 
-	return nil
+	if err != nil {
+		return nil, ErrorGettingUserProductOrders
+	}
+
+	return productOrders, nil
 }
 
-func (po *ProductOrder) GetOrdersByOrderId(orderId int) error {
-	query := "SELECT * FROM Product_Order WHERE orderId = ?"
+func (po *ProductOrderDataAccess) GetOrdersByOrderId(orderId models.OrderId) ([]models.ProductOrder, error) {
+	query := "SELECT * FROM Product_Order WHERE order_id = ?"
+	var productOrder models.ProductOrder
+	productOrders := []models.ProductOrder{}
 
-	_, err := po.dbConnection.Exec(query, orderId)
+	rows, err := po.dbConnection.Query(query, orderId)
+
+	for rows.Next() {
+		rows.Scan(productOrder.ID, productOrder.Quantity, productOrder.UserId, productOrder.ProductId, productOrder.OrderId, productOrder.CreatedOn, productOrder.UpdatedOn)
+
+		productOrders = append(productOrders, productOrder)
+	}
 	
 	if err != nil {
-		return ErrorUpdatingProductOrder
+		return nil, ErrorGettingProductOrders
 	}
 
 
-	return nil
+	return productOrders, nil
 }
 
-func (po *ProductOrder) UpdateProductOrder(productOrder models.ProductOrder) error {
+func (po *ProductOrderDataAccess) UpdateProductOrder(productOrder models.ProductOrder) error {
 	query := "UPDATE Product_Order SET quantity = ? WHERE id = ?"
 
 	_, err := po.dbConnection.Exec(query, productOrder.Quantity, productOrder.ID)
 	
 	if err != nil {
 		return ErrorUpdatingProductOrder
+	}
+
+	return nil
+}
+
+func (po *ProductOrderDataAccess) DeleteProductOrder(productOrderId models.ProductOrderId) error {
+	query := "DELETE Product_Order WHERE order_id = ?"
+
+	_, err := po.dbConnection.Exec(query, productOrderId)
+
+	if err != nil {
+		return ErrorDeletingProductOrders
 	}
 
 	return nil
