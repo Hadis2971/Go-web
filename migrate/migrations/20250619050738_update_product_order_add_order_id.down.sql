@@ -1,1 +1,1 @@
-ALTER TABLE Product_Order DROP COLUMN orderID
+ALTER TABLE Product_Order DROP COLUMN order_id

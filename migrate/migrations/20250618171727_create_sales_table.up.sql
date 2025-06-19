@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS Sales (
-    `userId` INT UNSIGNED NOT NULL,
-    `productId` INT UNSIGNED NOT NULL,
-    FOREIGN KEY (`userId`) REFERENCES `User` (`id`)
+    `user_id` INT UNSIGNED NOT NULL,
+    `product_id` INT UNSIGNED NOT NULL,
+    FOREIGN KEY (`user_id`) REFERENCES `User` (`id`)
     ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (`productId`) REFERENCES `Product` (`id`)
+    FOREIGN KEY (`product_id`) REFERENCES `Product` (`id`)
     ON DELETE CASCADE ON UPDATE CASCADE
 )

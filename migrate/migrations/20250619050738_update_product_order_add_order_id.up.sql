@@ -1,1 +1,1 @@
-ALTER TABLE Product_Order ADD orderID INT NOT NULL
+ALTER TABLE Product_Order ADD order_id INT NOT NULL
