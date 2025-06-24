@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/Hadis2971/go_web/models"
 )
@@ -20,6 +21,7 @@ var (
 	ErrorGettingProductOrders = errors.New("Error Getting Product Orders")
 	ErrorDeletingProductOrders = errors.New("Error Deleting Product Orders")
 	ErrorGettingUserProductOrdersByUserIdAndOrderId = errors.New("Error Getting Product Orders By User ID and Order ID")
+	ErrorProductNotFound = errors.New("Error Product Not Found!!!")
 )
 
 func NewProductOrderDataAccess(dbConnection *sql.DB) *ProductOrderDataAccess {
@@ -33,19 +35,25 @@ func (po *ProductOrderDataAccess) CreateProductOrder(productOrder models.Product
 
 	defer tx.Rollback()
 
-	queryCheckStock := "SELECT (stock >= ?) WHERE id = ?"
+	fmt.Println(productOrder.ProductId, productOrder.Quantity)
+
+	queryCheckStock := "SELECT (stock > ?) FROM Product WHERE id = ?"
 	var inStock bool
 
-	err := tx.QueryRowContext(ctx, queryCheckStock, productOrder.Quantity, productOrder.ID).Scan(&inStock)
+	err := tx.QueryRowContext(ctx, queryCheckStock, productOrder.Quantity, productOrder.ProductId).Scan(&inStock)
 
-	if err == sql.ErrNoRows || !inStock {
+	if err == sql.ErrNoRows {
+		return ErrorProductNotFound
+	}
+
+	if  !inStock {
 		return ErrorProductOutOfStock
 	}
 
 
 	queryUpdateStock := "UPDATE Product SET stock = stock - ? WHERE id = ?"
 
-	_, err = tx.ExecContext(ctx, queryUpdateStock, productOrder.Quantity, productOrder.ID)
+	_, err = tx.ExecContext(ctx, queryUpdateStock, productOrder.Quantity, productOrder.ProductId)
 
 	if err != nil {
 		return err
@@ -76,7 +84,7 @@ func (po *ProductOrderDataAccess) GetOrdersByUserId(userId models.UserId) ([]mod
 	rows, err := po.dbConnection.Query(query, userId)
 
 	for rows.Next() {
-		rows.Scan(productOrder.ID, productOrder.Quantity, productOrder.UserId, productOrder.ProductId, productOrder.OrderId, productOrder.CreatedOn, productOrder.UpdatedOn)
+		rows.Scan(&productOrder.ID, &productOrder.Quantity, &productOrder.UserId, &productOrder.ProductId, &productOrder.OrderId, &productOrder.CreatedOn, &productOrder.UpdatedOn)
 
 		productOrders = append(productOrders, productOrder)
 	}
@@ -96,7 +104,7 @@ func (po *ProductOrderDataAccess) GetOrdersByOrderId(orderId models.OrderId) ([]
 	rows, err := po.dbConnection.Query(query, orderId)
 
 	for rows.Next() {
-		rows.Scan(productOrder.ID, productOrder.Quantity, productOrder.UserId, productOrder.ProductId, productOrder.OrderId, productOrder.CreatedOn, productOrder.UpdatedOn)
+		rows.Scan(&productOrder.ID, &productOrder.Quantity, &productOrder.UserId, &productOrder.ProductId, &productOrder.OrderId, &productOrder.CreatedOn, &productOrder.UpdatedOn)
 
 		productOrders = append(productOrders, productOrder)
 	}
@@ -110,8 +118,8 @@ func (po *ProductOrderDataAccess) GetOrdersByOrderId(orderId models.OrderId) ([]
 }
 
 func (po *ProductOrderDataAccess) GetOrderByUserIdAndOrderId(userId models.UserId, orderId models.OrderId) ([]models.ProductAndUser, error) {
-	query := `SELECT User.id AS user_id, User.username, Product_Order.quantity, Product_Order.created_on AS order_created, Product_Order.updated_on AS order_updated FROM User JOIN Product_Order ON Product_Order.
-	user_id = ? AND Product_Order.order_id = ?;`
+	query := `SELECT User.id AS user_id, User.username, Product_Order.quantity, Product_Order.product_id AS product_id, Product_Order.created_on AS order_created, Product_Order.updated_on AS order_updated FROM
+	User JOIN Product_Order ON Product_Order.user_id = User.id WHERE Product_Order.user_id = ? AND Product_Order.order_id = ?`
 
 	var productOrderAndUser models.ProductAndUser
 	productOrdersAndUser := []models.ProductAndUser{}
@@ -119,12 +127,14 @@ func (po *ProductOrderDataAccess) GetOrderByUserIdAndOrderId(userId models.UserI
 
 	rows, err := po.dbConnection.Query(query, userId, orderId);
 
+	defer rows.Close()
+
 	if err != nil {
 		return nil, ErrorGettingUserProductOrdersByUserIdAndOrderId
 	}
 
 	for rows.Next() {
-		rows.Scan(productOrderAndUser.UserId, productOrderAndUser.Username, productOrderAndUser.Quantity, productOrderAndUser.OrderCreated, productOrderAndUser.OrderUpdated)
+		rows.Scan(&productOrderAndUser.UserId, &productOrderAndUser.Username, &productOrderAndUser.Quantity, &productOrderAndUser.ProductId, &productOrderAndUser.OrderCreated, &productOrderAndUser.OrderUpdated)
 
 		productOrdersAndUser = append(productOrdersAndUser, productOrderAndUser)
 	}

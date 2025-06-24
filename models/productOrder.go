@@ -18,15 +18,16 @@ type ProductOrder struct {
 }
 
 type CreateProductOrderReqPayload struct {
-	UserId int `json:"userId"`
-	ProductId int `json:"productId"`
+	UserId int `json:"user_id"`
+	ProductId int `json:"product_id"`
 	Quantity int `json:"quantity"`
 }
 
 type ProductAndUser struct {
 	UserId UserId `json:"user_id"`
+	ProductId ProductId `json:"product_id"`
 	Username string `json:"username"`
 	Quantity int `json:"quantity"`
-	OrderCreated time.Time `json:"order_created"`
-	OrderUpdated time.Time `json:"order_updated"`
+	OrderCreated string `json:"order_created"`
+	OrderUpdated string `json:"order_updated"`
 }

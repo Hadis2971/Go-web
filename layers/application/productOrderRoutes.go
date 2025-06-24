@@ -205,7 +205,7 @@ func (por *ProductOrderRoutes) RegisterRoutes() *http.ServeMux {
 	por.mux.HandleFunc("GET /list/order", authMiddleware.WithHttpRouthAuthentication(por.HandleGetProuctOrdersByOrderId))
 	por.mux.HandleFunc("POST /update/", authMiddleware.WithHttpRouthAuthentication(por.HandleUpdateProductOrder))
 	por.mux.HandleFunc("POST /delete/", authMiddleware.WithHttpRouthAuthentication(por.HandleDeleteProductOrder))
-	por.mux.HandleFunc("POST /list/user_order", authMiddleware.WithHttpRouthAuthentication(por.HandleGetProductOrdersByUserIdAndOrderId))
+	por.mux.HandleFunc("POST /list/user_order/", authMiddleware.WithHttpRouthAuthentication(por.HandleGetProductOrdersByUserIdAndOrderId))
 
 	return por.mux
 }
