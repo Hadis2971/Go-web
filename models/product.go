@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type ProductId int
 
 type Product struct {
@@ -8,8 +10,8 @@ type Product struct {
 	Price float64 `json:"price"`
 	Description string `json:"description"`
 	Stock int `json:"stock"`
-	CreatedOn string `json:"created_on"`
-	UpdatedOn string `json:"updated_on"`
+	CreatedOn time.Time `json:"created_on"`
+	UpdatedOn time.Time `json:"updated_on"`
 }
 
 type ProductReqPayload struct {

@@ -3,8 +3,9 @@ package application
 import (
 	"encoding/json"
 	"errors"
-	"math/rand"
 	"net/http"
+
+	"github.com/google/uuid"
 
 	"github.com/Hadis2971/go_web/layers/domain"
 	"github.com/Hadis2971/go_web/middlewares"
@@ -34,7 +35,7 @@ func (por *ProductOrderRoutes) HandleCreateProductOrder(w http.ResponseWriter, r
 		return
 	}
 
-	orderId := models.OrderId(rand.Intn(10000000))
+	orderId := models.OrderId(uuid.New().String())
 
 	newProductOrder := models.ProductOrder{OrderId: orderId, Quantity: productOrderReqPayload.Quantity, UserId: models.UserId(productOrderReqPayload.UserId), ProductId: models.ProductId(productOrderReqPayload.ProductId)}
 
@@ -83,7 +84,7 @@ func (por *ProductOrderRoutes) HandleGetProuctOrdersByUserId(w http.ResponseWrit
 
 func (por *ProductOrderRoutes) HandleGetProuctOrdersByOrderId(w http.ResponseWriter, r *http.Request) {
 	type ReqPayload struct {
-		OrderId int `json:"order_id"`
+		OrderId models.OrderId `json:"order_id"`
 	}
 
 	type Response struct {
@@ -123,9 +124,7 @@ func (por *ProductOrderRoutes) HandleUpdateProductOrder(w http.ResponseWriter, r
 		return
 	}
 
-	orderId := models.OrderId(rand.Intn(10000000))
-
-	newProductOrder := models.ProductOrder{ID: productOrderReqPayload.ID, OrderId: orderId, Quantity: productOrderReqPayload.Quantity, UserId: models.UserId(productOrderReqPayload.UserId), ProductId: models.ProductId(productOrderReqPayload.ProductId)}
+	newProductOrder := models.ProductOrder{ID: productOrderReqPayload.ID, Quantity: productOrderReqPayload.Quantity, UserId: models.UserId(productOrderReqPayload.UserId), ProductId: models.ProductId(productOrderReqPayload.ProductId)}
 
 	err = por.productOrderDomain.HandleUpdateProductOrder(newProductOrder)
 

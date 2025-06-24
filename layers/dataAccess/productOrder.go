@@ -41,7 +41,7 @@ func (po *ProductOrderDataAccess) CreateProductOrder(productOrder models.Product
 		return ErrorProductOutOfStock
 	}
 
-	queryCreate := "INSERT INTO Product_Order (quantity, user_id, product_id, order_id) VALUES(?, ?, ?)"
+	queryCreate := "INSERT INTO Product_Order (quantity, user_id, product_id, order_id) VALUES(?, ?, ?, ?)"
 
 	_, err := po.dbConnection.Exec(queryCreate, productOrder.Quantity, productOrder.UserId, productOrder.ProductId, productOrder.OrderId)
 
