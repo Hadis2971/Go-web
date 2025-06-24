@@ -1,6 +1,7 @@
 package dataAccess
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 
@@ -26,25 +27,39 @@ func NewProductOrderDataAccess(dbConnection *sql.DB) *ProductOrderDataAccess {
 }
 
 func (po *ProductOrderDataAccess) CreateProductOrder(productOrder models.ProductOrder) error {
-	queryCheckStock := "SELECT stock FROM Product WHERE id = ?"
-	
-	type QueryCheckStockResponse struct {
-		Stock int
+	ctx := context.Background()
+
+	tx, _ := po.dbConnection.BeginTx(ctx, nil)
+
+	defer tx.Rollback()
+
+	queryCheckStock := "SELECT (stock >= ?) WHERE id = ?"
+	var inStock bool
+
+	err := tx.QueryRowContext(ctx, queryCheckStock, productOrder.Quantity, productOrder.ID).Scan(&inStock)
+
+	if err == sql.ErrNoRows || !inStock {
+		return ErrorProductOutOfStock
 	}
 
-	queryCheckStockResponse := QueryCheckStockResponse{}
-	
-	row:= po.dbConnection.QueryRow(queryCheckStock, productOrder.ProductId)
 
-	row.Scan(queryCheckStockResponse.Stock)
+	queryUpdateStock := "UPDATE Product SET stock = stock - ? WHERE id = ?"
 
-	if queryCheckStockResponse.Stock == 0 {
-		return ErrorProductOutOfStock
+	_, err = tx.ExecContext(ctx, queryUpdateStock, productOrder.Quantity, productOrder.ID)
+
+	if err != nil {
+		return err
 	}
 
 	queryCreate := "INSERT INTO Product_Order (quantity, user_id, product_id, order_id) VALUES(?, ?, ?, ?)"
 
-	_, err := po.dbConnection.Exec(queryCreate, productOrder.Quantity, productOrder.UserId, productOrder.ProductId, productOrder.OrderId)
+	_, err = tx.ExecContext(ctx, queryCreate, productOrder.Quantity, productOrder.UserId, productOrder.ProductId, productOrder.OrderId)
+
+	if err != nil {
+		return ErrorCreatingProductOrder
+	}
+
+	err = tx.Commit()
 
 	if err != nil {
 		return ErrorCreatingProductOrder
