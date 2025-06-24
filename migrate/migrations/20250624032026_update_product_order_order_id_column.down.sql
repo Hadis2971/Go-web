@@ -1,0 +1,1 @@
+ALTER TABLE Product_Order MODIFY COLUMN order_id INT NOT NULL;
