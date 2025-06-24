@@ -18,6 +18,7 @@ var (
 	ErrorGettingUserProductOrders = errors.New("Error Getting User Product Orders")
 	ErrorGettingProductOrders = errors.New("Error Getting Product Orders")
 	ErrorDeletingProductOrders = errors.New("Error Deleting Product Orders")
+	ErrorGettingUserProductOrdersByUserIdAndOrderId = errors.New("Error Getting Product Orders By User ID and Order ID")
 )
 
 func NewProductOrderDataAccess(dbConnection *sql.DB) *ProductOrderDataAccess {
@@ -91,6 +92,29 @@ func (po *ProductOrderDataAccess) GetOrdersByOrderId(orderId models.OrderId) ([]
 
 
 	return productOrders, nil
+}
+
+func (po *ProductOrderDataAccess) GetOrderByUserIdAndOrderId(userId models.UserId, orderId models.OrderId) ([]models.ProductAndUser, error) {
+	query := `SELECT User.id AS user_id, User.username, Product_Order.quantity, Product_Order.created_on AS order_created, Product_Order.updated_on AS order_updated FROM User JOIN Product_Order ON Product_Order.
+	user_id = ? AND Product_Order.order_id = ?;`
+
+	var productOrderAndUser models.ProductAndUser
+	productOrdersAndUser := []models.ProductAndUser{}
+
+
+	rows, err := po.dbConnection.Query(query, userId, orderId);
+
+	if err != nil {
+		return nil, ErrorGettingUserProductOrdersByUserIdAndOrderId
+	}
+
+	for rows.Next() {
+		rows.Scan(productOrderAndUser.UserId, productOrderAndUser.Username, productOrderAndUser.Quantity, productOrderAndUser.OrderCreated, productOrderAndUser.OrderUpdated)
+
+		productOrdersAndUser = append(productOrdersAndUser, productOrderAndUser)
+	}
+
+	return productOrdersAndUser, nil
 }
 
 func (po *ProductOrderDataAccess) UpdateProductOrder(productOrder models.ProductOrder) error {

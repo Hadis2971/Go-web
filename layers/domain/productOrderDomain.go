@@ -43,6 +43,16 @@ func (pod ProductOrderDomain) HandleGetProductOrdersByOrderId(orderId models.Ord
 	return productOrders, nil
 }
 
+func (pod ProductOrderDomain) HandleGetProductOrdersByUserIdAndOrderId(userId models.UserId, orderId models.OrderId) ([]models.ProductAndUser, error) {
+	productOrdersAndUser, err := pod.productOrderDataAccess.GetOrderByUserIdAndOrderId(userId, orderId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return productOrdersAndUser, nil
+}
+
 func (pod ProductOrderDomain) HandleUpdateProductOrder(productOrder models.ProductOrder) error {
 	err := pod.productOrderDataAccess.UpdateProductOrder(productOrder)
 

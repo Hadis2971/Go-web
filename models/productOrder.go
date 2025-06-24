@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type ProductOrderId int
 type OrderId string
@@ -19,4 +21,12 @@ type CreateProductOrderReqPayload struct {
 	UserId int `json:"userId"`
 	ProductId int `json:"productId"`
 	Quantity int `json:"quantity"`
+}
+
+type ProductAndUser struct {
+	UserId UserId `json:"user_id"`
+	Username string `json:"username"`
+	Quantity int `json:"quantity"`
+	OrderCreated time.Time `json:"order_created"`
+	OrderUpdated time.Time `json:"order_updated"`
 }
