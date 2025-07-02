@@ -19,6 +19,7 @@ func ConnectToDatabase() *sql.DB {
 		Net:    envConfig["DB_NET"],
 		Addr:   envConfig["DB_Addr"],
 		DBName: envConfig["DB_NAME"],
+		ParseTime: true,
 	}
 
 	db, err := sql.Open("mysql", cfg.FormatDSN())

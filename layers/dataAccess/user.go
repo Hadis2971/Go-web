@@ -3,6 +3,7 @@ package dataAccess
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/Hadis2971/go_web/models"
 )
@@ -17,8 +18,8 @@ type FoundUserReponse struct {
 	ID models.UserId `json:"id"`
 	Username string `json:"username"`
 	Email string `json:"email"`
-	CreatedOn string `json:"created_on"`
-	UpdatedOn string `json:"updated_on"`
+	CreatedOn time.Time `json:"created_on"`
+	UpdatedOn time.Time `json:"updated_on"`
 	Password string
 }
 
