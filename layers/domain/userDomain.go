@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/Hadis2971/go_web/layers/dataAccess"
+	"github.com/Hadis2971/go_web/models"
 )
 
 type UserDomain struct {
@@ -42,4 +43,14 @@ func (ud *UserDomain) HandleUpdateUser(updateUserRequest dataAccess.UpdateUserRe
 	}
 
 	return nil
+}
+
+func (ud *UserDomain) HandleGetAllUsersAndTheirOrders() ([]models.UserWithOrders, error) {
+	userWithOrders, err := ud.userDataAccess.GetAllUsersAndTheirOrders()
+
+	if (errors.Is(err, dataAccess.ErrorNoUserOrderProductsFound)) {
+		return nil, dataAccess.ErrorNoUserOrderProductsFound
+	}
+
+	return userWithOrders, nil
 }

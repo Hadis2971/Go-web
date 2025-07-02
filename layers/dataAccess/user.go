@@ -22,12 +22,15 @@ type FoundUserReponse struct {
 	Password string
 }
 
+
+
 type IUserDataAccess interface {
 	CreateUser(user models.User) error
 	DeleteUser(id int) error
 	UpdateUser(updateUserRequest UpdateUserRequest) error
 	GetUserByUsernameOrEmail(user models.User) (*FoundUserReponse, error)
 	GetUserById(id int) (*FoundUserReponse, error)
+	GetAllUsersAndTheirOrders() ([]models.UserWithOrders, error)
 }
 
 type UserDataAccess struct {
@@ -39,6 +42,7 @@ var (
 	ErrorMissingID = errors.New("Missing ID Field!!!")
 	ErrorMissingUsernameOrEmail = errors.New("Missing Username Or Email!!!")
 	ErrorUserNotFound = errors.New("User Not Found!!!")
+	ErrorNoUserOrderProductsFound = errors.New("No Users And Product Orders Found!!!")
 )
 
 func NewUserDataAccess(dbConnection *sql.DB) *UserDataAccess {
@@ -130,3 +134,62 @@ func (da UserDataAccess) GetUserById(id int) (*FoundUserReponse, error) {
 
 	return &foundUserReponse, nil
 }
+
+func (da UserDataAccess) GetAllUsersAndTheirOrders() ([]models.UserWithOrders, error) {
+	query := `SELECT User.id, User.username, User.email, 
+	Product_Order.id as product_order_id, Product_Order.user_id, Product_Order.order_id, Product_Order.product_id, Product_Order.quantity, 
+	Product.id as product_id, Product.name as product_name, Product.description AS product_description, Product.price, Product.stock, Product.created_on, Product.updated_on
+	FROM User LEFT JOIN Product_Order ON User.id = Product_Order.user_id 
+	LEFT JOIN Product ON Product_Order.product_id = Product.id;`
+
+	var basicUser models.BasicUser
+	var fullOrder models.FullOrder
+	var fullOrders []models.FullOrder
+	var product models.Product
+	var productOrderWithProduct models.ProductOrderWithProduct
+	var userWithOrders []models.UserWithOrders
+
+	userAndOrdersMap := make(map[int]models.UserWithOrders)
+
+	rows, err := da.dbConnection.Query(query)
+
+	defer rows.Close()
+
+	if err == sql.ErrNoRows {
+		return nil, ErrorNoUserOrderProductsFound
+	}
+
+	for rows.Next() {
+		rows.Scan(&fullOrder.Id, &fullOrder.Username, &fullOrder.Email, &fullOrder.ProductOrderId, &fullOrder.UserId, &fullOrder.OrderId, &fullOrder.ProductId, &fullOrder.Quantity, &fullOrder.ProductId, &fullOrder.ProductName, &fullOrder.ProductDescription, &fullOrder.ProductPrice, &fullOrder.ProductStock, &fullOrder.ProductCreatedOn, &fullOrder.ProductUpdatedOn)
+
+		fullOrders = append(fullOrders, fullOrder)
+	}
+
+	for _, val := range fullOrders {
+		_, ok := userAndOrdersMap[val.Id]
+
+		if !ok {
+			basicUser = models.BasicUser{ID: val.Id, Username: val.Username, Email: val.Email}
+			userAndOrdersMap[val.Id] = models.UserWithOrders{ID: basicUser.ID, Username: basicUser.Username, Email: basicUser.Email}
+		}
+
+		if val.OrderId != nil {
+
+			product = models.Product{ID: *val.ProductId, Name: *val.ProductName, Description: *val.ProductDescription, Price: *val.ProductPrice, Stock: *val.ProductStock, CreatedOn: *val.ProductCreatedOn, UpdatedOn: *val.ProductCreatedOn}
+			productOrderWithProduct = models.ProductOrderWithProduct{ProductOrderId: *val.ProductOrderId, UserId: *val.UserId, OrderId: *val.OrderId, ProductId: *val.ProductId, Quantity: *val.Quantity, Product: product}
+	
+			user := userAndOrdersMap[val.Id]
+			user.Orders = append(user.Orders, productOrderWithProduct)
+
+			userAndOrdersMap[val.Id] = user
+		}
+	}
+
+	for _, val := range userAndOrdersMap {
+		userWithOrders = append(userWithOrders, val)
+	}
+ 
+	return userWithOrders, nil
+}
+
+

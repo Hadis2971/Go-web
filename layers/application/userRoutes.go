@@ -9,6 +9,7 @@ import (
 	"github.com/Hadis2971/go_web/layers/dataAccess"
 	"github.com/Hadis2971/go_web/layers/domain"
 	"github.com/Hadis2971/go_web/middlewares"
+	"github.com/Hadis2971/go_web/models"
 )
 
 type UserRouteHandler struct {
@@ -69,11 +70,34 @@ func (ur UserRouteHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 }
 
+func (ur UserRouteHandler) HandleGetAllUsersAndTheirOrders(w http.ResponseWriter, r *http.Request) {
+	type Response struct {
+		UserWithOrders []models.UserWithOrders `json:"user_and_orders"`
+	}
+
+	userWithOrders, err := ur.userDomain.HandleGetAllUsersAndTheirOrders()
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+
+		return
+	}
+
+	
+	userAndOrdersJson, err := json.Marshal(&Response{UserWithOrders: userWithOrders})
+
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(userAndOrdersJson)
+}
+
 func (ur *UserRouteHandler) RegisterRoutes() *http.ServeMux {
 	authMiddleware := middlewares.NewAuthMiddleware()
 
 	ur.mux.HandleFunc("POST /delete/", authMiddleware.WithHttpRouthAuthentication(ur.HandleDeleteUser))
 	ur.mux.HandleFunc("POST /update/", authMiddleware.WithHttpRouthAuthentication(ur.HandleUpdateUser))
+	ur.mux.HandleFunc("GET /product_orders/", authMiddleware.WithHttpRouthAuthentication(ur.HandleGetAllUsersAndTheirOrders))
 
 	return ur.mux
 }
