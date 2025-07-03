@@ -159,7 +159,7 @@ func (po *ProductOrderDataAccess) GetOrdersByOrderId(orderId models.OrderId) ([]
 	rows, err := po.dbConnection.Query(query, orderId)
 
 	for rows.Next() {
-		rows.Scan(&productOrder.ID, &productOrder.Quantity, &productOrder.UserId, &productOrder.ProductId, &productOrder.OrderId, &productOrder.CreatedOn, &productOrder.UpdatedOn)
+		rows.Scan(&productOrder.ID, &productOrder.Quantity, &productOrder.UserId, &productOrder.ProductId, &productOrder.CreatedOn, &productOrder.UpdatedOn, &productOrder.OrderId)
 
 		productOrders = append(productOrders, productOrder)
 	}
