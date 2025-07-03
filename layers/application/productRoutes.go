@@ -202,11 +202,11 @@ func (pr *ProductRoutes) HandleUpdateProduct(w http.ResponseWriter, r *http.Requ
 func (pr *ProductRoutes) RegisterRoutes() *http.ServeMux {
 	authMiddleware := middlewares.NewAuthMiddleware()
 
-	pr.mux.HandleFunc("POST /create/", authMiddleware.WithHttpRouthAuthentication(pr.HandleCreateProduct))
-	pr.mux.HandleFunc("GET /list/", authMiddleware.WithHttpRouthAuthentication(pr.HandleGetAllProducts))
-	pr.mux.HandleFunc("POST /list/", authMiddleware.WithHttpRouthAuthentication(pr.HandleGetProductById))
-	pr.mux.HandleFunc("POST /delete/", authMiddleware.WithHttpRouthAuthentication(pr.HandleDeleteProduct))
-	pr.mux.HandleFunc("POST /update/", authMiddleware.WithHttpRouthAuthentication(pr.HandleUpdateProduct))
+	pr.mux.HandleFunc("POST /create", authMiddleware.WithHttpRouthAuthentication(pr.HandleCreateProduct))
+	pr.mux.HandleFunc("GET /list", authMiddleware.WithHttpRouthAuthentication(pr.HandleGetAllProducts))
+	pr.mux.HandleFunc("POST /list", authMiddleware.WithHttpRouthAuthentication(pr.HandleGetProductById))
+	pr.mux.HandleFunc("POST /delete", authMiddleware.WithHttpRouthAuthentication(pr.HandleDeleteProduct))
+	pr.mux.HandleFunc("POST /update", authMiddleware.WithHttpRouthAuthentication(pr.HandleUpdateProduct))
 
 
 	return pr.mux

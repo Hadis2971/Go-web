@@ -74,8 +74,8 @@ func (arh AuthRouteHandler) HandleLoginUser(w http.ResponseWriter, r *http.Reque
 }
 
 func (arh AuthRouteHandler) RegisterRoutes() *http.ServeMux {
-	arh.mux.HandleFunc("POST /register/", arh.HandleRegisterUser)
-	arh.mux.HandleFunc("POST /login/", arh.HandleLoginUser)
+	arh.mux.HandleFunc("POST /register", arh.HandleRegisterUser)
+	arh.mux.HandleFunc("POST /login", arh.HandleLoginUser)
 
 	return arh.mux
 }

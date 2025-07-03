@@ -95,9 +95,9 @@ func (ur UserRouteHandler) HandleGetAllUsersAndTheirOrders(w http.ResponseWriter
 func (ur *UserRouteHandler) RegisterRoutes() *http.ServeMux {
 	authMiddleware := middlewares.NewAuthMiddleware()
 
-	ur.mux.HandleFunc("POST /delete/", authMiddleware.WithHttpRouthAuthentication(ur.HandleDeleteUser))
-	ur.mux.HandleFunc("POST /update/", authMiddleware.WithHttpRouthAuthentication(ur.HandleUpdateUser))
-	ur.mux.HandleFunc("GET /product_orders/", authMiddleware.WithHttpRouthAuthentication(ur.HandleGetAllUsersAndTheirOrders))
+	ur.mux.HandleFunc("POST /delete", authMiddleware.WithHttpRouthAuthentication(ur.HandleDeleteUser))
+	ur.mux.HandleFunc("POST /update", authMiddleware.WithHttpRouthAuthentication(ur.HandleUpdateUser))
+	ur.mux.HandleFunc("GET /product_orders", authMiddleware.WithHttpRouthAuthentication(ur.HandleGetAllUsersAndTheirOrders))
 
 	return ur.mux
 }
