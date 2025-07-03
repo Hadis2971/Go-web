@@ -26,7 +26,7 @@ func NewProductOrderRoutes(productOrderDomain *domain.ProductOrderDomain) *Produ
 }
 
 func (por *ProductOrderRoutes) HandleCreateProductOrder(w http.ResponseWriter, r *http.Request) {
-	var productOrderReqPayload models.CreateProductOrderReqPayload
+	var productOrderReqPayload models.ProductOrderRequestPayload
 
 	err := json.NewDecoder(r.Body).Decode(&productOrderReqPayload)
 
@@ -47,6 +47,33 @@ func (por *ProductOrderRoutes) HandleCreateProductOrder(w http.ResponseWriter, r
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (por *ProductOrderRoutes) HandleCreateProductOrderWithMultipleProducts(w http.ResponseWriter, r *http.Request) {
+	var productOrderReqPayload []models.ProductOrderRequestPayload
+	newProductOrders := []models.ProductOrder{}
+	orderId := models.OrderId(uuid.New().String())
+
+	err := json.NewDecoder(r.Body).Decode(&productOrderReqPayload)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+
+	for _, val := range productOrderReqPayload {
+		newProductOrders = append(newProductOrders, models.ProductOrder{OrderId: orderId, Quantity: val.Quantity, UserId: models.UserId(val.UserId), ProductId: models.ProductId(val.ProductId)})
+	}
+
+	err = por.productOrderDomain.HandleCreateProductOrderWithMultipleProducts(newProductOrders)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	w.WriteHeader(http.StatusOK)
+
 }
 
 
@@ -201,6 +228,7 @@ func (por *ProductOrderRoutes) RegisterRoutes() *http.ServeMux {
 	authMiddleware := middlewares.NewAuthMiddleware()
 
 	por.mux.HandleFunc("POST /create/", authMiddleware.WithHttpRouthAuthentication(por.HandleCreateProductOrder))
+	por.mux.HandleFunc("POST /create_multiple/", authMiddleware.WithHttpRouthAuthentication(por.HandleCreateProductOrderWithMultipleProducts))
 	por.mux.HandleFunc("POST /list/user", authMiddleware.WithHttpRouthAuthentication(por.HandleGetProuctOrdersByUserId))
 	por.mux.HandleFunc("GET /list/order", authMiddleware.WithHttpRouthAuthentication(por.HandleGetProuctOrdersByOrderId))
 	por.mux.HandleFunc("POST /update/", authMiddleware.WithHttpRouthAuthentication(por.HandleUpdateProductOrder))

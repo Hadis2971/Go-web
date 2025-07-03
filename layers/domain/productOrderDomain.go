@@ -23,6 +23,16 @@ func (pod ProductOrderDomain) HandleCreateProductOrder(productOrder models.Produ
 	return nil
 }
 
+func (pod ProductOrderDomain) HandleCreateProductOrderWithMultipleProducts(productOrders []models.ProductOrder) error {
+	err := pod.productOrderDataAccess.CreateProductOrderWithMultipleProducts(productOrders)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (pod ProductOrderDomain) HandleGetProuctOrdersByUserId(userId models.UserId) ([]models.ProductOrder, error) {
 	productOrders, err := pod.productOrderDataAccess.GetOrdersByUserId(userId)
 

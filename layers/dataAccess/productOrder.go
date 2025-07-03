@@ -76,6 +76,61 @@ func (po *ProductOrderDataAccess) CreateProductOrder(productOrder models.Product
 	return nil
 }
 
+func (po *ProductOrderDataAccess) CreateProductOrderWithMultipleProducts(productOrders []models.ProductOrder) error {
+	tx, err := po.dbConnection.Begin()
+
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	var inStock bool
+
+	checkIfInStockQuery := "SELECT (stock >= ?) FROM Product WHERE id = ?"
+
+	for _, productOrder := range productOrders {
+		err := tx.QueryRow(checkIfInStockQuery, productOrder.Quantity, productOrder.ProductId).Scan(&inStock)
+
+		if err == sql.ErrNoRows {
+			return ErrorProductNotFound
+		}
+
+		if !inStock {
+			return ErrorProductOutOfStock
+		}
+	}
+
+	updateStockQuery := "UPDATE Product SET stock = stock - ? WHERE id = ?"
+
+	for _, productOrder := range productOrders {
+		_, err := tx.Exec(updateStockQuery, productOrder.Quantity, productOrder.ProductId)
+
+		if err != nil {
+			return err
+		}
+	}
+
+
+	createProuctOrderQuery := "INSERT INTO Product_Order (user_id, product_id, quantity, order_id) VALUES(?,?,?,?)"
+
+	for _, productOrder := range productOrders {
+		_, err := tx.Exec(createProuctOrderQuery, productOrder.UserId, productOrder.ProductId, productOrder.Quantity, productOrder.OrderId)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit();
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (po *ProductOrderDataAccess) GetOrdersByUserId(userId models.UserId) ([]models.ProductOrder, error) {
 	query := "SELECT * FROM Product_Order WHERE user_id = ?"
 	var productOrder models.ProductOrder

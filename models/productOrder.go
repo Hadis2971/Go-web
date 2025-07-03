@@ -17,12 +17,6 @@ type ProductOrder struct {
 	UpdatedOn time.Time `json:"updated_on"`
 }
 
-type CreateProductOrderReqPayload struct {
-	UserId int `json:"user_id"`
-	ProductId int `json:"product_id"`
-	Quantity int `json:"quantity"`
-}
-
 type ProductAndUser struct {
 	UserId UserId `json:"user_id"`
 	ProductId ProductId `json:"product_id"`
@@ -56,4 +50,10 @@ type FullOrder struct {
 	ProductStock *int `json:"product_stock"`
 	ProductCreatedOn *time.Time `json:"product_created_on"`
 	ProductUpdatedOn *time.Time `json:"product_updated_on"`
+}
+
+type ProductOrderRequestPayload struct {
+	UserId UserId `json:"user_id"`
+	ProductId ProductOrderId `json:"product_id"`
+	Quantity int `json:"quantity"`
 }
