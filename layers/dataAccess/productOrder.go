@@ -182,11 +182,11 @@ func (po *ProductOrderDataAccess) GetOrderByUserIdAndOrderId(userId models.UserI
 
 	rows, err := po.dbConnection.Query(query, userId, orderId);
 
-	defer rows.Close()
-
 	if err != nil {
 		return nil, ErrorGettingUserProductOrdersByUserIdAndOrderId
 	}
+
+	defer rows.Close()
 
 	for rows.Next() {
 		rows.Scan(&productOrderAndUser.UserId, &productOrderAndUser.Username, &productOrderAndUser.Quantity, &productOrderAndUser.ProductId, &productOrderAndUser.OrderCreated, &productOrderAndUser.OrderUpdated)

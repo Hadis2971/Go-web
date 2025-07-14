@@ -154,11 +154,11 @@ func (da UserDataAccess) GetAllUsersAndTheirOrders() ([]models.UserWithOrders, e
 
 	rows, err := da.dbConnection.Query(query)
 
-	defer rows.Close()
-
 	if err == sql.ErrNoRows {
 		return nil, ErrorNoUserOrderProductsFound
 	}
+
+	defer rows.Close()
 
 	for rows.Next() {
 		rows.Scan(&fullOrder.Id, &fullOrder.Username, &fullOrder.Email, &fullOrder.ProductOrderId, &fullOrder.UserId, &fullOrder.OrderId, &fullOrder.ProductId, &fullOrder.Quantity, &fullOrder.ProductId, &fullOrder.ProductName, &fullOrder.ProductDescription, &fullOrder.ProductPrice, &fullOrder.ProductStock, &fullOrder.ProductCreatedOn, &fullOrder.ProductUpdatedOn)

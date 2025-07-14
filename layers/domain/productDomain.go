@@ -90,6 +90,7 @@ func (pd *ProductDomain) HandleUpdateProduct(product models.ProductReqPayload) (
 		Description: product.Description,
 		Price: float64(product.Price),
 		Stock: product.Stock,
+	    ProductCategory: product.ProductCategory,
 	}
 
 	if errors.Is(err, dataAccess.ErrorUpdateProduct) {

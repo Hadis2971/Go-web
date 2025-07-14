@@ -30,11 +30,13 @@ func (app Application) Run() {
 	userDataAccess := dataAccess.NewUserDataAccess(dbConnection)
 	productDataAccess := dataAccess.NewProductDataAccess(dbConnection)
 	productOrderDataAccess := dataAccess.NewProductOrderDataAccess(dbConnection)
+	productCategoryDataAccess := dataAccess.NewProductCategoryDataAccess(dbConnection)
 
 	authDomain := domain.NewAuthDomain(userDataAccess)
 	userDomain := domain.NewUserDomain(userDataAccess)
 	productDomain := domain.NewProductDomain(productDataAccess)
 	productOrderDomain := domain.NewProductOrderDomain(productOrderDataAccess)
+	productCategoryDomain := domain.NewProductCategoryDomain(productCategoryDataAccess)
 
 	chatDomain := domain.NewChatDomain(websocketChatService)
 	wsProductDomain := domain.NewWsProductDomain(websocketProductService)
@@ -43,6 +45,7 @@ func (app Application) Run() {
 	userRouteHandler := NewUserRouteHandler(userDomain)
 	productRouteHandler := NewProductRoutes(productDomain, wsProductDomain)
 	productOrderRouteHandler := NewProductOrderRoutes(productOrderDomain)
+	productCategoryRouteHandler := NewProductCategoryRoutes(productCategoryDomain)
 
 	websocketRoutesHandler := NewWebsocketRoutesHandler(chatDomain)
 	wescoketProductRouteHandler := NewProductWebsocketRoutesHandler(wsProductDomain)
@@ -51,6 +54,7 @@ func (app Application) Run() {
 	userMux := userRouteHandler.RegisterRoutes()
 	productMux := productRouteHandler.RegisterRoutes()
 	productOrderMux := productOrderRouteHandler.RegisterRoutes()
+	productCategoryMux := productCategoryRouteHandler.RegisterRoutes()
 
 	wsChantHandler := websocketRoutesHandler.RegisterRoute()
 	wsProductHandler := wescoketProductRouteHandler.RegisterWsProductRoute()
@@ -59,6 +63,7 @@ func (app Application) Run() {
 	mux.Handle("/user/", http.StripPrefix("/user", userMux)) 
 	mux.Handle("/product/", http.StripPrefix("/product", productMux))
 	mux.Handle("/product_order/", http.StripPrefix("/product_order", productOrderMux))
+	mux.Handle("/product_category/", http.StripPrefix("/product_category", productCategoryMux))
 
 	mux.Handle("/chat", wsChantHandler)
 	mux.Handle("/product/ws", wsProductHandler)

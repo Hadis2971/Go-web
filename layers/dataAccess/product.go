@@ -53,12 +53,13 @@ func (pda *ProductDataAccess) GetAllProducts() ([]models.Product, error) {
 
 	rows, err := pda.dbConnection.Query(query)
 
-
-	defer rows.Close()
-
 	if err != nil {
 		return nil, ErrorGetAllProducts
 	}
+
+	defer rows.Close()
+
+	
 
 	
 	for rows.Next() {
@@ -111,15 +112,15 @@ func (pda *ProductDataAccess) DeleteProduct(id models.ProductId) error {
 }
 
 func (pda *ProductDataAccess) UpdateProduct(product models.ProductReqPayload) (sql.Result, error) {
-	query := "UPDATE Product SET name = ?, price = ?, description = ?, stock = ? WHERE id = ?"
+	query := "UPDATE Product SET name = ?, price = ?, description = ?, stock = ? product_category = ? WHERE id = ?"
 
-	if (product.ID == "" || product.Name == "" || product.Price == 0 || product.Description == "") {
+	if (product.ID == "" || product.Name == "" || product.Price == 0 || product.Description == "" || product.ProductCategory == 0) {
 		return nil, ErrorUpdateProductMissingFields
 	}
 
 	id, _ := strconv.Atoi(product.ID)
 
-	sqlResult, err := pda.dbConnection.Exec(query, product.Name, product.Price, product.Description, product.Stock, id)
+	sqlResult, err := pda.dbConnection.Exec(query, product.Name, product.Price, product.Description, product.Stock, product.ProductCategory, id)
 
 	if err != nil {
 		return nil, ErrorUpdateProduct
