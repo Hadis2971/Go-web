@@ -3,6 +3,7 @@ package models
 import "time"
 
 type ProductId int
+type ProductCategoryId int
 
 type Product struct {
 	ID ProductId `json:"id"`
@@ -10,6 +11,7 @@ type Product struct {
 	Price float64 `json:"price"`
 	Description string `json:"description"`
 	Stock int `json:"stock"`
+	ProductCategory ProductCategoryId `json:"product_category"`
 	CreatedOn time.Time `json:"created_on"`
 	UpdatedOn time.Time `json:"updated_on"`
 }
@@ -21,3 +23,12 @@ type ProductReqPayload struct {
 	Price int `json:"price"`
 	Stock int `json:"stock"`
 }
+
+const (
+	Phone ProductCategoryId = iota + 1
+	Laptop 
+	DesktopComputer 
+	Appliance
+	Game
+	TV
+)

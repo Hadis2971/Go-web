@@ -1,1 +1,1 @@
-ALTER TABLE Product_Order MODIFY COLUMN order_id INT NOT NULL;
+ALTER TABLE Product_Order DROP IF EXISTS order_id;

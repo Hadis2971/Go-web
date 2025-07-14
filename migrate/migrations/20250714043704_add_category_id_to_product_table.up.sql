@@ -1,0 +1,1 @@
+ALTER TABLE Product ADD `category` INT UNSIGNED NOT NULL;

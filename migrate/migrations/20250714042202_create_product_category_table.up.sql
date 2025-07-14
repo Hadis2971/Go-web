@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS Product_Category (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL,
+    `category` INT UNSIGNED NOT NULL,
+
+    PRIMARY KEY(id),
+    UNIQUE KEY(category)
+)
