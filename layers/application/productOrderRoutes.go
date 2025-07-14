@@ -200,7 +200,7 @@ func (por *ProductOrderRoutes) HandleUpdateProductOrder(w http.ResponseWriter, r
 
 func (por *ProductOrderRoutes) HandleDeleteProductOrder(w http.ResponseWriter, r *http.Request) {
 	type ReqPayload struct {
-		ID int `json:"id"`
+		OrderId models.OrderId `json:"order_id"`
 	}
 
 	var reqPayload ReqPayload
@@ -214,7 +214,7 @@ func (por *ProductOrderRoutes) HandleDeleteProductOrder(w http.ResponseWriter, r
 
 	
 
-	err = por.productOrderDomain.HandleDeleteProductOrder(models.ProductOrderId(reqPayload.ID))
+	err = por.productOrderDomain.HandleDeleteProductOrder(reqPayload.OrderId)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

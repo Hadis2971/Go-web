@@ -209,10 +209,41 @@ func (po *ProductOrderDataAccess) UpdateProductOrder(productOrder models.Product
 	return nil
 }
 
-func (po *ProductOrderDataAccess) DeleteProductOrder(productOrderId models.ProductOrderId) error {
-	query := "DELETE Product_Order WHERE order_id = ?"
+func (po *ProductOrderDataAccess) DeleteProductOrder(orderId models.OrderId) error {
+	tx, err := po.dbConnection.Begin()
 
-	_, err := po.dbConnection.Exec(query, productOrderId)
+	defer tx.Rollback()
+
+	if err != nil {
+		return err
+	}
+
+	productOrders, err := po.GetOrdersByOrderId(orderId)
+
+	if err != nil {
+		return err;
+	}
+
+	updateProductStockQuery := "UPDATE Product Set stock = stock + ? WHERE id = ?"
+
+	for _, productOrder := range productOrders {
+		_, err := tx.Exec(updateProductStockQuery, productOrder.Quantity, productOrder.ID)
+
+		if err != nil {
+			return ErrorDeletingProductOrders
+		}
+	}
+
+	deleteProductOrderQuery := "DELETE Product_Order WHERE order_id = ?"
+
+	_, err = po.dbConnection.Exec(deleteProductOrderQuery, orderId)
+
+	if err != nil {
+		return ErrorDeletingProductOrders
+	}
+
+	err = tx.Commit()
+
 
 	if err != nil {
 		return ErrorDeletingProductOrders

@@ -73,8 +73,8 @@ func (pod ProductOrderDomain) HandleUpdateProductOrder(productOrder models.Produ
 	return nil
 }
 
-func (pod ProductOrderDomain) HandleDeleteProductOrder(productOrderId models.ProductOrderId) error {
-	err := pod.productOrderDataAccess.DeleteProductOrder(productOrderId)
+func (pod ProductOrderDomain) HandleDeleteProductOrder(orderId models.OrderId) error {
+	err := pod.productOrderDataAccess.DeleteProductOrder(orderId)
 
 	if err != nil {
 		return err
